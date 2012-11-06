@@ -23,7 +23,7 @@
 
 ## API
 
-  ### debounce(fn, wait, [ immediate ])
+### debounce(fn, wait, [ immediate ])
 
   Creates and returns a new debounced version of the passed function that will postpone its execution until after wait milliseconds have elapsed since the last time it was invoked.
 
