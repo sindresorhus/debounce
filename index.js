@@ -20,7 +20,7 @@ module.exports = function debounce(func, threshold, execAsap){
         func.apply(obj, args);
       }
       timeout = null;
-    };
+    }
 
     if (timeout) {
       clearTimeout(timeout);

@@ -1,13 +1,15 @@
 
 # debounce
 
-  Underscore's [debounce](http://underscorejs.org/#debounce) method as a component.
-
   Useful for implementing behavior that should only happen after the input has stopped arriving. For example: rendering a preview of a Markdown comment, recalculating a layout after the window has stopped being resized, and so on.
 
 ## Installation
 
     $ component install matthewmueller/debounce
+
+  Or in node:
+
+    $ npm install debounce
 
 ## Example
 
@@ -23,7 +25,7 @@
 
 ## API
 
-### debounce(fn, wait, [ immediate ])
+### debounce(fn, wait, [ immediate || true ])
 
   Creates and returns a new debounced version of the passed function that will postpone its execution until after wait milliseconds have elapsed since the last time it was invoked.
 
