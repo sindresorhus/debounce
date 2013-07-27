@@ -1,29 +1,33 @@
 /**
- * Debounce
+ * Debounces a function by the given threshold.
  *
- * Returns a function, that, as long as it continues to be invoked, will not
- * be triggered. The function will be called after it stops being called for
- * N milliseconds. If `immediate` is passed, trigger the function on the
- * leading edge, instead of the trailing.
- *
- * @param {Function} func
- * @param {Number} wait
- * @param {Boolean} immediate
- * @return {Function}
+ * @see http://unscriptable.com/2009/03/20/debouncing-javascript-methods/
+ * @param {Function} function to wrap
+ * @param {Number} timeout in ms (`100`)
+ * @param {Boolean} whether to execute at the beginning (`true`)
+ * @api public
  */
 
-module.exports = function(func, wait, immediate) {
-  var timeout, result;
-  return function() {
-    var context = this, args = arguments;
-    var later = function() {
+module.exports = function debounce(func, threshold, execAsap){
+  var timeout;
+  if (false !== execAsap) execAsap = true;
+
+  return function debounced(){
+    var obj = this, args = arguments;
+
+    function delayed () {
+      if (!execAsap) {
+        func.apply(obj, args);
+      }
       timeout = null;
-      if (!immediate) result = func.apply(context, args);
     };
-    var callNow = immediate && !timeout;
-    clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
-    if (callNow) result = func.apply(context, args);
-    return result;
+
+    if (timeout) {
+      clearTimeout(timeout);
+    } else if (execAsap) {
+      func.apply(obj, args);
+    }
+
+    timeout = setTimeout(delayed, threshold || 100);
   };
 };
