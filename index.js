@@ -4,13 +4,12 @@
  * @see http://unscriptable.com/2009/03/20/debouncing-javascript-methods/
  * @param {Function} function to wrap
  * @param {Number} timeout in ms (`100`)
- * @param {Boolean} whether to execute at the beginning (`true`)
+ * @param {Boolean} whether to execute at the beginning (`false`)
  * @api public
  */
 
 module.exports = function debounce(func, threshold, execAsap){
   var timeout;
-  if (false !== execAsap) execAsap = true;
 
   return function debounced(){
     var obj = this, args = arguments;

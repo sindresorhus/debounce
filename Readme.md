@@ -1,7 +1,7 @@
 
 # debounce
 
-  Useful for implementing behavior that should only happen after the input has stopped arriving. For example: rendering a preview of a Markdown comment, recalculating a layout after the window has stopped being resized, and so on.
+  Useful for implementing behavior that should only happen after a repeated action has completed. For example: rendering a preview of a Markdown comment, recalculating a layout after the window has stopped being resized, and so on.
 
 ## Installation
 
@@ -25,7 +25,7 @@
 
 ## API
 
-### debounce(fn, wait, [ immediate || true ])
+### debounce(fn, wait, [ immediate || false ])
 
   Creates and returns a new debounced version of the passed function that will postpone its execution until after wait milliseconds have elapsed since the last time it was invoked.
 
