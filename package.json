@@ -1,0 +1,16 @@
+{
+  "name": "debounce",
+  "description": "fn debounce",
+  "version": "0.0.3",
+  "main": "index.js",
+  "dependencies": {},
+  "devDependencies": {
+    "mocha": "*",
+    "should": "*"
+  },
+  "component": {
+    "scripts": {
+      "debounce/index.js": "index.js"
+    }
+  }
+}
