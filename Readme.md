@@ -5,7 +5,7 @@
 
 ## Installation
 
-    $ component install matthewmueller/debounce
+    $ component install component/debounce
 
   Or in node:
 
