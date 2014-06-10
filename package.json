@@ -4,6 +4,12 @@
   "version": "0.0.3",
   "repository": "git://github.com/component/debounce",
   "main": "index.js",
+  "license": "MIT",
+  "keywords": [
+    "function",
+    "throttle",
+    "invoke"
+  ],
   "dependencies": {},
   "devDependencies": {
     "mocha": "*",

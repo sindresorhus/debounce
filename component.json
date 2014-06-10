@@ -7,7 +7,11 @@
   "scripts": [
     "index.js"
   ],
-  "keywords": [],
+  "keywords": [
+    "function",
+    "throttle",
+    "invoke"
+  ],
   "dependencies": {},
   "development": {},
   "license": "MIT"
