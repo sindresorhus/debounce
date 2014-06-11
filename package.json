@@ -10,7 +10,9 @@
     "throttle",
     "invoke"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "date-now": "1.0.0"
+  },
   "devDependencies": {
     "mocha": "*",
     "should": "*"
