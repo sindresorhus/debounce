@@ -34,3 +34,6 @@ function resize(e) {
 ## License
 
   MIT
+
+  Original implementation is from [`underscore.js`](http://underscorejs.org/)
+  which also has an MIT license.
