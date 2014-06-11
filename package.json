@@ -11,7 +11,7 @@
     "invoke"
   ],
   "dependencies": {
-    "date-now": "1.0.0"
+    "date-now": "1.0.1"
   },
   "devDependencies": {
     "mocha": "*",
