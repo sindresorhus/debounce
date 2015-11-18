@@ -32,7 +32,7 @@ module.exports = function debounce(func, wait, immediate){
       timeout = null;
       if (!immediate) {
         result = func.apply(context, args);
-        if (!timeout) context = args = null;
+        context = args = null;
       }
     }
   };
