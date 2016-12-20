@@ -12,9 +12,7 @@
     "throttle",
     "invoke"
   ],
-  "dependencies": {
-    "Raynos/date-now": "v1.0.1"
-  },
+  "dependencies": {},
   "development": {},
   "license": "MIT"
 }
