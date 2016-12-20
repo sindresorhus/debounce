@@ -1,10 +1,3 @@
-
-/**
- * Module dependencies.
- */
-
-var now = require('date-now');
-
 /**
  * Returns a function, that, as long as it continues to be invoked, will not
  * be triggered. The function will be called after it stops being called for
@@ -25,7 +18,7 @@ module.exports = function debounce(func, wait, immediate){
   if (null == wait) wait = 100;
 
   function later() {
-    var last = now() - timestamp;
+    var last = Date.now() - timestamp;
 
     if (last < wait && last > 0) {
       timeout = setTimeout(later, wait - last);
@@ -41,7 +34,7 @@ module.exports = function debounce(func, wait, immediate){
   var debounced = function(){
     context = this;
     args = arguments;
-    timestamp = now();
+    timestamp = Date.now();
     var callNow = immediate && !timeout;
     if (!timeout) timeout = setTimeout(later, wait);
     if (callNow) {
