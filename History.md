@@ -1,4 +1,14 @@
 
+1.0.2 / 2017-01-18
+==================
+
+ * remove date-now dependency (#13 selbekk)
+
+1.0.1 / 2016-07-25
+==================
+
+ * ability to clear timer (#10, @benjamincarp)
+
 1.0.0 / 2014-06-21
 ==================
 
