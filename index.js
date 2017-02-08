@@ -20,7 +20,7 @@ module.exports = function debounce(func, wait, immediate){
   function later() {
     var last = Date.now() - timestamp;
 
-    if (last < wait && last > 0) {
+    if (last < wait && last >= 0) {
       timeout = setTimeout(later, wait - last);
     } else {
       timeout = null;
