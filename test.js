@@ -33,7 +33,7 @@ describe('catch issue #3 - Debounced function executing early?', function() {
     setTimeout(fn, 200)
     setTimeout(fn, 250)
 
-    // set the clock to 100 (perioid of the wait) ticks after the last debounced call
+    // set the clock to 100 (period of the wait) ticks after the last debounced call
     clock.tick(350)
 
     // the callback should have been triggered once
