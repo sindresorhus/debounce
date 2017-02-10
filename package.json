@@ -4,6 +4,9 @@
   "version": "1.0.1",
   "repository": "git://github.com/component/debounce",
   "main": "index.js",
+  "scripts": {
+    "test": "minijasminenode test.js"
+  },
   "license": "MIT",
   "keywords": [
     "function",
@@ -11,6 +14,8 @@
     "invoke"
   ],
   "devDependencies": {
+    "minijasminenode": "^1.1.1",
+    "sinon": "^1.17.7",
     "mocha": "*",
     "should": "*"
   },
