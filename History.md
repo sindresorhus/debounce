@@ -1,4 +1,18 @@
 
+1.0.2 / 2017-04-21
+==================
+
+ * Fixes #3 - Debounced function executing early? (#15)
+ * Merge pull request #13 from selbekk/master
+ * Remove date-now from package.json
+ * Remove date-now dependency from component.json
+ * Remove date-now usage
+
+1.0.1 / 2016-07-25
+==================
+
+ * add ability to clear timer (#10)
+
 1.0.0 / 2014-06-21
 ==================
 
