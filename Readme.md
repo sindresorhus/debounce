@@ -29,10 +29,9 @@ To later clear the timer and cancel currently scheduled executions:
 window.onresize.clear();
 ```
 
-To force the function to execute immediately and reset the timer for
-any future invocations:
+To execute any pending invocations and reset the timer:
 ```
-window.onresize.force();
+window.onresize.flush();
 ```
 
 ## API
@@ -51,7 +50,7 @@ window.onresize.force();
   The debounced function returned has a property 'clear' that is a 
   function that will clear any scheduled future executions of your function.
 
-  The debounced function returned has a property 'force' that is a 
+  The debounced function returned has a property 'flush' that is a 
   function that will immediately execute the function if execution is scheduled,
   and reset the execution timer for subsequent invocations of the debounced
   function.

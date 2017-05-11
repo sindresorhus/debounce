@@ -52,7 +52,7 @@ module.exports = function debounce(func, wait, immediate){
     }
   };
   
-  debounced.force = function() {
+  debounced.flush = function() {
     if (timeout) {
       result = func.apply(context, args);
       context = args = null;

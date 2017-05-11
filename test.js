@@ -75,7 +75,7 @@ describe('forcing execution', function() {
 
   })
 
-  it('should execute prior to timeout when forced', function() {
+  it('should execute prior to timeout when flushed', function() {
 
     var callback = sinon.spy()
 
@@ -89,14 +89,14 @@ describe('forcing execution', function() {
     // set the clock to 25 (period of the wait) ticks after the last debounced call
     clock.tick(175)
     
-    fn.force()
+    fn.flush()
 
     // the callback has been called
     expect(callback.callCount).toEqual(1)
 
   })
 
-  it('should not execute again after timeout when forced before the timeout', function() {
+  it('should not execute again after timeout when flushed before the timeout', function() {
 
     var callback = sinon.spy()
 
@@ -110,7 +110,7 @@ describe('forcing execution', function() {
     // set the clock to 25 (period of the wait) ticks after the last debounced call
     clock.tick(175)
     
-    fn.force()
+    fn.flush()
     
     // the callback has been called here
     expect(callback.callCount).toEqual(1)
@@ -123,7 +123,7 @@ describe('forcing execution', function() {
 
   })
 
-  it('should not execute on a timer after being forced', function() {
+  it('should not execute on a timer after being flushed', function() {
 
     var callback = sinon.spy()
 
@@ -137,7 +137,7 @@ describe('forcing execution', function() {
     // set the clock to 25 (period of the wait) ticks after the last debounced call
     clock.tick(175)
     
-    fn.force()
+    fn.flush()
     
     // the callback has been called here
     expect(callback.callCount).toEqual(1)
@@ -153,14 +153,14 @@ describe('forcing execution', function() {
 
   })
 
-  it('should not execute when forced if nothing was scheduled', function() {
+  it('should not execute when flushed if nothing was scheduled', function() {
 
     var callback = sinon.spy()
 
     // set up debounced function with wait of 100
     var fn = debounce(callback, 100)
 
-    fn.force()
+    fn.flush()
     
     // the callback should not have been called
     expect(callback.callCount).toEqual(0)
