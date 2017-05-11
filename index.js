@@ -51,6 +51,16 @@ module.exports = function debounce(func, wait, immediate){
       timeout = null;
     }
   };
+  
+  debounced.flush = function() {
+    if (timeout) {
+      result = func.apply(context, args);
+      context = args = null;
+      
+      clearTimeout(timeout);
+      timeout = null;
+    }
+  };
 
   return debounced;
 };
