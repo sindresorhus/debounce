@@ -51,7 +51,7 @@ window.onresize.flush();
   function that will clear any scheduled future executions of your function.
 
   The debounced function returned has a property 'flush' that is a 
-  function that will immediately execute the function if execution is scheduled,
+  function that will immediately execute the function if and only if execution is scheduled,
   and reset the execution timer for subsequent invocations of the debounced
   function.
 
