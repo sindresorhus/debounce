@@ -13,51 +13,85 @@
  * @api public
  */
 function debounce(func, wait, immediate){
-  var timeout, args, context, timestamp, result;
+  function newDeferred () {
+    var deferred = {};
+    deferred.promise = new Promise(function (resolve, reject) {
+      deferred.resolve = resolve;
+      deferred.reject = reject;
+    });
+
+    return deferred;
+  }
+
+  var timeout, args, context, timestamp, result, laterDeferred;
   if (null == wait) wait = 100;
-
-  function later() {
-    var last = Date.now() - timestamp;
-
-    if (last < wait && last >= 0) {
-      timeout = setTimeout(later, wait - last);
-    } else {
-      timeout = null;
-      if (!immediate) {
-        result = func.apply(context, args);
-        context = args = null;
-      }
-    }
-  };
 
   var debounced = function(){
     context = this;
     args = arguments;
+
+    var later = function() {
+      var last = Date.now() - timestamp;
+
+      if (last < wait && last >= 0) {
+        timeout = setTimeout(later, wait - last);
+      } else {
+        timeout = null;
+        laterDeferred = null;
+        if (!immediate) {
+          try {
+            result = func.apply(context, args);
+            later.deferred.resolve(result);
+          } catch (e) {
+            later.deferred.reject(e);
+          }
+
+          context = args = null;
+        }
+      }
+    };
+    later.deferred = laterDeferred = laterDeferred || newDeferred();
+
     timestamp = Date.now();
     var callNow = immediate && !timeout;
     if (!timeout) timeout = setTimeout(later, wait);
     if (callNow) {
-      result = func.apply(context, args);
+      laterDeferred = null;
+      var deferred = newDeferred();
+      try {
+        result = func.apply(context, args);
+        deferred.resolve(result);
+      } catch (e) {
+        deferred.reject(e);
+      }
+      
       context = args = null;
     }
 
-    return result;
+    return laterDeferred.promise;
   };
 
   debounced.clear = function() {
     if (timeout) {
       clearTimeout(timeout);
       timeout = null;
+      laterDeferred = null;
     }
   };
   
   debounced.flush = function() {
     if (timeout) {
-      result = func.apply(context, args);
+      try {
+        result = func.apply(context, args);
+        laterDeferred.resolve(result);
+      } catch (e) {
+        laterDeferred.reject(e);
+      }
       context = args = null;
       
       clearTimeout(timeout);
       timeout = null;
+      laterDeferred = null;
     }
   };
 

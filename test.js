@@ -168,3 +168,57 @@ describe('forcing execution', function() {
   })
 
 })
+
+describe('Promises', function() {
+
+  // use sinon to control the clock
+  var clock
+
+  beforeEach(function(){
+    clock = sinon.useFakeTimers()
+  })
+
+  afterEach(function(){
+    clock.restore()
+  })
+
+  it('should return the same promise', function(done) {
+
+    var callback = sinon.spy()
+    var resolutionFn = sinon.spy()
+
+    // set up debounced function with wait of 100
+    var fn = debounce(callback, 100)
+
+    var promises = []
+
+    function callAndStorePromise() {
+      var promise = fn()
+      promises.push(promise)
+      promise.then(resolutionFn)
+    }
+
+    // call debounced function at interval of 50
+    setTimeout(callAndStorePromise, 100)
+    setTimeout(callAndStorePromise, 150)
+    setTimeout(callAndStorePromise, 200)
+    setTimeout(callAndStorePromise, 250)
+
+    // set the clock to 100 (period of the wait) ticks after the last debounced call
+    clock.tick(350)
+
+    expect(typeof promises[0].then).toEqual('function')
+    expect(promises[0]).toEqual(promises[1])
+    expect(promises[0]).toEqual(promises[2])
+    expect(promises[0]).toEqual(promises[3])
+
+    // the callback should have been triggered once
+    expect(callback.callCount).toEqual(1)
+
+    Promise.all(promises).then(function() {
+      expect(resolutionFn.callCount).toEqual(4)
+      done()
+    })
+  })
+
+})
