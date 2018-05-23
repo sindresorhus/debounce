@@ -3,9 +3,13 @@
   "description": "Creates and returns a new debounced version of the passed function that will postpone its execution until after wait milliseconds have elapsed since the last time it was invoked",
   "version": "1.2.0",
   "repository": "git://github.com/component/debounce",
-  "main": "index.js",
+  "main": "index.cjs.js",
+  "module": "index.js",
   "scripts": {
-    "test": "minijasminenode test.js"
+    "build": "rollup --input index.js --file index.cjs.js --format cjs",
+    "pretest": "npm run build",
+    "test": "minijasminenode test.js",
+    "prepublish": "npm run build"
   },
   "license": "MIT",
   "keywords": [
@@ -15,13 +19,14 @@
   ],
   "devDependencies": {
     "minijasminenode": "^1.1.1",
-    "sinon": "^1.17.7",
     "mocha": "*",
-    "should": "*"
+    "rollup": "^0.59.2",
+    "should": "*",
+    "sinon": "^1.17.7"
   },
   "component": {
     "scripts": {
-      "debounce/index.js": "index.js"
+      "debounce/index.js": "index.cjs.js"
     }
   }
 }

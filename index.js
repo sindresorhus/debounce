@@ -64,7 +64,4 @@ function debounce(func, wait, immediate){
   return debounced;
 };
 
-// Adds compatibility for ES modules
-debounce.debounce = debounce;
-
-module.exports = debounce;
+export default debounce;
