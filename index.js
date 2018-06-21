@@ -13,15 +13,24 @@
  * @api public
  */
 
-module.exports = function debounce(func, wait, immediate){
-  var timeout, args, context, timestamp, result;
+module.exports = function debounce(func, wait, immediate) {
+  var timeout, args, context, timestamp, result, getTimestamp, scheduler;
+
+  if (immediate != null && typeof immediate === "object") {
+    immediate = immediate.immediate;
+    getTimestamp = immediate.getTimestamp;
+    scheduler = immediate.scheduler;
+  }
+
   if (null == wait) wait = 100;
+  if (null == scheduler) scheduler = setTimeout;
+  if (null == getTimestamp) getTimestamp = function () { return Date.now(); };
 
   function later() {
-    var last = Date.now() - timestamp;
+    var last = getTimestamp() - timestamp;
 
     if (last < wait && last >= 0) {
-      timeout = setTimeout(later, wait - last);
+      timeout = scheduler(later, wait - last);
     } else {
       timeout = null;
       if (!immediate) {
@@ -34,9 +43,9 @@ module.exports = function debounce(func, wait, immediate){
   var debounced = function(){
     context = this;
     args = arguments;
-    timestamp = Date.now();
+    timestamp = getTimestamp();
     var callNow = immediate && !timeout;
-    if (!timeout) timeout = setTimeout(later, wait);
+    if (!timeout) timeout = scheduler(later, wait);
     if (callNow) {
       result = func.apply(context, args);
       context = args = null;
