@@ -34,6 +34,12 @@ To execute any pending invocations and reset the timer:
 window.onresize.flush();
 ```
 
+Alternately, if using newer syntax:
+
+```js
+import { debounce } from "debounce";
+```
+
 ## API
 
 ### debounce(fn, wait, [ immediate || false ])
