@@ -67,4 +67,5 @@ function debounce(func, wait, immediate){
 // Adds compatibility for ES modules
 debounce.debounce = debounce;
 
-module.exports = debounce;
+// allows for direct usage in browser AND with commonJS require()
+if (typeof module !== 'undefined' && typeof module.exports !== 'undefined') module.exports = debounce;
