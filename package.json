@@ -6,7 +6,7 @@
   "main": "index.cjs.js",
   "module": "index.js",
   "scripts": {
-    "build": "rollup --input index.js --file index.cjs.js --format cjs",
+    "build": "sed 's/export default /module.exports = /' index.js > index.cjs.js",
     "pretest": "npm run build",
     "test": "minijasminenode test.js",
     "prepublish": "npm run build"
@@ -20,7 +20,6 @@
   "devDependencies": {
     "minijasminenode": "^1.1.1",
     "mocha": "*",
-    "rollup": "^0.59.2",
     "should": "*",
     "sinon": "^1.17.7"
   },
