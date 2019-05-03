@@ -3,13 +3,12 @@
   "description": "Creates and returns a new debounced version of the passed function that will postpone its execution until after wait milliseconds have elapsed since the last time it was invoked",
   "version": "1.2.0",
   "repository": "git://github.com/component/debounce",
-  "main": "index.cjs.js",
-  "module": "index.js",
+  "main": "index.js",
+  "module": "index.esm.js",
   "scripts": {
-    "build": "sed 's/export default /module.exports = /' index.js > index.cjs.js",
-    "pretest": "npm run build",
+    "build": "sed 's/module.exports = /export default /' index.js > index.esm.js",
     "test": "minijasminenode test.js",
-    "prepublish": "npm run build"
+    "prepublishOnly": "npm run build"
   },
   "license": "MIT",
   "keywords": [
@@ -25,7 +24,7 @@
   },
   "component": {
     "scripts": {
-      "debounce/index.js": "index.cjs.js"
+      "debounce/index.js": "index.js"
     }
   }
 }

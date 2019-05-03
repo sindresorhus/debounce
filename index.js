@@ -64,4 +64,4 @@ function debounce(func, wait, immediate){
   return debounced;
 };
 
-export default debounce;
+module.exports = debounce;
