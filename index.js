@@ -24,8 +24,10 @@ function debounce(func, wait, immediate){
     } else {
       timeout = null;
       if (!immediate) {
-        result = func.apply(context, args);
+        var curr_context = context, curr_args = args;
+
         context = args = null;
+        result = func.apply(curr_context, curr_args);
       }
     }
   };
@@ -37,8 +39,10 @@ function debounce(func, wait, immediate){
     var callNow = immediate && !timeout;
     if (!timeout) timeout = setTimeout(later, wait);
     if (callNow) {
-      result = func.apply(context, args);
+      var curr_context = context, curr_args = args;
+
       context = args = null;
+      result = func.apply(curr_context, curr_args);
     }
 
     return result;
@@ -53,9 +57,11 @@ function debounce(func, wait, immediate){
   
   debounced.flush = function() {
     if (timeout) {
-      result = func.apply(context, args);
+      var curr_context = context, curr_args = args;
+
       context = args = null;
-      
+      result = func.apply(curr_context, curr_args);
+
       clearTimeout(timeout);
       timeout = null;
     }
