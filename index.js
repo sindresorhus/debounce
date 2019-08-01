@@ -7,9 +7,9 @@
  *
  * @source underscore.js
  * @see http://unscriptable.com/2009/03/20/debouncing-javascript-methods/
- * @param {Function} function to wrap
- * @param {Number} timeout in ms (`100`)
- * @param {Boolean} whether to execute at the beginning (`false`)
+ * @param {Function} func function to wrap
+ * @param {number} [wait] timeout in ms (`100`)
+ * @param {boolean} [immediate] whether to execute at the beginning (`false`)
  * @api public
  */
 function debounce(func, wait, immediate){
