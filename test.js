@@ -167,4 +167,24 @@ describe('forcing execution', function() {
 
   })
 
+  it('should execute with correct args when called again from within timeout', function() {
+    const callback = sinon.spy(n =>
+      // recursively call debounced function until n == 0
+      --n && fn(n)
+    );
+
+    const fn = debounce(callback, 100)
+
+    fn(3)
+
+    clock.tick(125)
+    clock.tick(250)
+    clock.tick(375)
+
+    expect(callback.callCount).toEqual(3)
+    expect(callback.args[0]).toEqual([3])
+    expect(callback.args[1]).toEqual([2])
+    expect(callback.args[2]).toEqual([1])
+  });
+
 })
