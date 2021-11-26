@@ -37,7 +37,7 @@ window.onresize.flush();
 Alternately, if using newer syntax:
 
 ```js
-import { debounce } from "debounce";
+import debounce from "debounce";
 ```
 
 ## API
