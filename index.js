@@ -5,6 +5,16 @@
  * leading edge, instead of the trailing. The function also has a property 'clear' 
  * that is a function which will clear the timer to prevent previously scheduled executions. 
  *
+ * A common issue with other debounce implementations is that if the user closes
+ * the browser tab, the debounced function may not have run yet. This is a
+ * frequent cause of data loss. This implementation prevents that problem by
+ * running the debounced function immediately if the tab is closed prior to the
+ * timeout. (This is ignored in Node.js or other headless runtimes.)
+ *
+ * When making debounced API calls it is recommended to use `fetch()` with the
+ * `keepalive` parameter. This allows the HTTP request to finish in the
+ * background after the user closes the browser tab.
+ *
  * @source underscore.js
  * @see http://unscriptable.com/2009/03/20/debouncing-javascript-methods/
  * @param {Function} function to wrap
@@ -18,14 +28,24 @@ function debounce(func, wait, immediate){
 
   function later() {
     var last = Date.now() - timestamp;
+    var pageHidden = global.document && global.document.visibilityState === 'hidden';
 
-    if (last < wait && last >= 0) {
+    clearTimeout(timeout);
+    if (last < wait && last >= 0 && (!pageHidden || immediate)) {
       timeout = setTimeout(later, wait - last);
     } else {
+      if (!immediate && global.document && global.document.removeEventListener) {
+        global.document.removeEventListener(
+          'visibilityChange',
+          later, { capture: true });
+      }
       timeout = null;
       if (!immediate) {
         result = func.apply(context, args);
-        context = args = null;
+        // This check is needed because `func` can recursively invoke `debounced`.
+        if (!timeout) {
+          context = args = null;
+        }
       }
     }
   };
@@ -35,7 +55,13 @@ function debounce(func, wait, immediate){
     args = arguments;
     timestamp = Date.now();
     var callNow = immediate && !timeout;
-    if (!timeout) timeout = setTimeout(later, wait);
+    if (!timeout) {
+        timeout = setTimeout(later, wait);
+        if (!immediate && global.document && global.document.addEventListener) {
+          global.document.addEventListener(
+              'visibilityChange', later, { capture: true, passive: true });
+        }
+    }
     if (callNow) {
       result = func.apply(context, args);
       context = args = null;
