@@ -1,190 +1,175 @@
-var debounce = require('.')
-var sinon = require('sinon')
+/* eslint-env jasmine */
+const sinon = require('sinon');
+const debounce = require('./index.js');
 
-describe('housekeeping', function() {
-  it('should be defined as a function', function() {
-    expect(typeof debounce).toEqual('function')
-  })
-})
+describe('housekeeping', () => {
+	it('should be defined as a function', () => {
+		expect(typeof debounce).toEqual('function');
+	});
+});
 
-describe('catch issue #3 - Debounced function executing early?', function() {
+describe('catch issue #3 - Debounced function executing early?', () => {
+	// Use sinon to control the clock
+	let clock;
 
-  // use sinon to control the clock
-  var clock
+	beforeEach(() => {
+		clock = sinon.useFakeTimers();
+	});
 
-  beforeEach(function(){
-    clock = sinon.useFakeTimers()
-  })
+	afterEach(() => {
+		clock.restore();
+	});
 
-  afterEach(function(){
-    clock.restore()
-  })
+	it('should debounce with fast timeout', () => {
+		const callback = sinon.spy();
 
-  it('should debounce with fast timeout', function() {
+		// Set up debounced function with wait of 100
+		const fn = debounce(callback, 100);
 
-    var callback = sinon.spy()
+		// Call debounced function at interval of 50
+		setTimeout(fn, 100);
+		setTimeout(fn, 150);
+		setTimeout(fn, 200);
+		setTimeout(fn, 250);
 
-    // set up debounced function with wait of 100
-    var fn = debounce(callback, 100)
+		// Set the clock to 100 (period of the wait) ticks after the last debounced call
+		clock.tick(350);
 
-    // call debounced function at interval of 50
-    setTimeout(fn, 100)
-    setTimeout(fn, 150)
-    setTimeout(fn, 200)
-    setTimeout(fn, 250)
+		// The callback should have been triggered once
+		expect(callback.callCount).toEqual(1);
+	});
+});
 
-    // set the clock to 100 (period of the wait) ticks after the last debounced call
-    clock.tick(350)
+describe('forcing execution', () => {
+	// Use sinon to control the clock
+	let clock;
 
-    // the callback should have been triggered once
-    expect(callback.callCount).toEqual(1)
+	beforeEach(() => {
+		clock = sinon.useFakeTimers();
+	});
 
-  })
+	afterEach(() => {
+		clock.restore();
+	});
 
-})
+	it('should not execute prior to timeout', () => {
+		const callback = sinon.spy();
 
-describe('forcing execution', function() {
+		// Set up debounced function with wait of 100
+		const fn = debounce(callback, 100);
 
-  // use sinon to control the clock
-  var clock
+		// Call debounced function at interval of 50
+		setTimeout(fn, 100);
+		setTimeout(fn, 150);
 
-  beforeEach(function(){
-    clock = sinon.useFakeTimers()
-  })
+		// Set the clock to 25 (period of the wait) ticks after the last debounced call
+		clock.tick(175);
 
-  afterEach(function(){
-    clock.restore()
-  })
+		// The callback should not have been called yet
+		expect(callback.callCount).toEqual(0);
+	});
 
-  it('should not execute prior to timeout', function() {
+	it('should execute prior to timeout when flushed', () => {
+		const callback = sinon.spy();
 
-    var callback = sinon.spy()
+		// Set up debounced function with wait of 100
+		const fn = debounce(callback, 100);
 
-    // set up debounced function with wait of 100
-    var fn = debounce(callback, 100)
+		// Call debounced function at interval of 50
+		setTimeout(fn, 100);
+		setTimeout(fn, 150);
 
-    // call debounced function at interval of 50
-    setTimeout(fn, 100)
-    setTimeout(fn, 150)
+		// Set the clock to 25 (period of the wait) ticks after the last debounced call
+		clock.tick(175);
 
-    // set the clock to 25 (period of the wait) ticks after the last debounced call
-    clock.tick(175)
+		fn.flush();
 
-    // the callback should not have been called yet
-    expect(callback.callCount).toEqual(0)
+		// The callback has been called
+		expect(callback.callCount).toEqual(1);
+	});
 
-  })
+	it('should not execute again after timeout when flushed before the timeout', () => {
+		const callback = sinon.spy();
 
-  it('should execute prior to timeout when flushed', function() {
+		// Set up debounced function with wait of 100
+		const fn = debounce(callback, 100);
 
-    var callback = sinon.spy()
+		// Call debounced function at interval of 50
+		setTimeout(fn, 100);
+		setTimeout(fn, 150);
 
-    // set up debounced function with wait of 100
-    var fn = debounce(callback, 100)
+		// Set the clock to 25 (period of the wait) ticks after the last debounced call
+		clock.tick(175);
 
-    // call debounced function at interval of 50
-    setTimeout(fn, 100)
-    setTimeout(fn, 150)
+		fn.flush();
 
-    // set the clock to 25 (period of the wait) ticks after the last debounced call
-    clock.tick(175)
-    
-    fn.flush()
+		// The callback has been called here
+		expect(callback.callCount).toEqual(1);
 
-    // the callback has been called
-    expect(callback.callCount).toEqual(1)
+		// Move to past the timeout
+		clock.tick(225);
 
-  })
+		// The callback should have only been called once
+		expect(callback.callCount).toEqual(1);
+	});
 
-  it('should not execute again after timeout when flushed before the timeout', function() {
+	it('should not execute on a timer after being flushed', () => {
+		const callback = sinon.spy();
 
-    var callback = sinon.spy()
+		// Set up debounced function with wait of 100
+		const fn = debounce(callback, 100);
 
-    // set up debounced function with wait of 100
-    var fn = debounce(callback, 100)
+		// Call debounced function at interval of 50
+		setTimeout(fn, 100);
+		setTimeout(fn, 150);
 
-    // call debounced function at interval of 50
-    setTimeout(fn, 100)
-    setTimeout(fn, 150)
+		// Set the clock to 25 (period of the wait) ticks after the last debounced call
+		clock.tick(175);
 
-    // set the clock to 25 (period of the wait) ticks after the last debounced call
-    clock.tick(175)
-    
-    fn.flush()
-    
-    // the callback has been called here
-    expect(callback.callCount).toEqual(1)
-    
-    // move to past the timeout
-    clock.tick(225)
+		fn.flush();
 
-    // the callback should have only been called once
-    expect(callback.callCount).toEqual(1)
+		// The callback has been called here
+		expect(callback.callCount).toEqual(1);
 
-  })
+		// Schedule again
+		setTimeout(fn, 250);
 
-  it('should not execute on a timer after being flushed', function() {
+		// Move to past the new timeout
+		clock.tick(400);
 
-    var callback = sinon.spy()
+		// The callback should have been called again
+		expect(callback.callCount).toEqual(2);
+	});
 
-    // set up debounced function with wait of 100
-    var fn = debounce(callback, 100)
+	it('should not execute when flushed if nothing was scheduled', () => {
+		const callback = sinon.spy();
 
-    // call debounced function at interval of 50
-    setTimeout(fn, 100)
-    setTimeout(fn, 150)
+		// Set up debounced function with wait of 100
+		const fn = debounce(callback, 100);
 
-    // set the clock to 25 (period of the wait) ticks after the last debounced call
-    clock.tick(175)
-    
-    fn.flush()
-    
-    // the callback has been called here
-    expect(callback.callCount).toEqual(1)
-    
-    // schedule again
-    setTimeout(fn, 250)
-    
-    // move to past the new timeout
-    clock.tick(400)
+		fn.flush();
 
-    // the callback should have been called again
-    expect(callback.callCount).toEqual(2)
+		// The callback should not have been called
+		expect(callback.callCount).toEqual(0);
+	});
 
-  })
+	it('should execute with correct args when called again from within timeout', () => {
+		const callback = sinon.spy(n =>
+			// Recursively call debounced function until n == 0
+			--n && fn(n),
+		);
 
-  it('should not execute when flushed if nothing was scheduled', function() {
+		const fn = debounce(callback, 100);
 
-    var callback = sinon.spy()
+		fn(3);
 
-    // set up debounced function with wait of 100
-    var fn = debounce(callback, 100)
+		clock.tick(125);
+		clock.tick(250);
+		clock.tick(375);
 
-    fn.flush()
-    
-    // the callback should not have been called
-    expect(callback.callCount).toEqual(0)
-
-  })
-
-  it('should execute with correct args when called again from within timeout', function() {
-    const callback = sinon.spy(n =>
-      // recursively call debounced function until n == 0
-      --n && fn(n)
-    );
-
-    const fn = debounce(callback, 100)
-
-    fn(3)
-
-    clock.tick(125)
-    clock.tick(250)
-    clock.tick(375)
-
-    expect(callback.callCount).toEqual(3)
-    expect(callback.args[0]).toEqual([3])
-    expect(callback.args[1]).toEqual([2])
-    expect(callback.args[2]).toEqual([1])
-  });
-
-})
+		expect(callback.callCount).toEqual(3);
+		expect(callback.args[0]).toEqual([3]);
+		expect(callback.args[1]).toEqual([2]);
+		expect(callback.args[2]).toEqual([1]);
+	});
+});

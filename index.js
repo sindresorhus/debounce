@@ -1,73 +1,78 @@
-/**
- * Returns a function, that, as long as it continues to be invoked, will not
- * be triggered. The function will be called after it stops being called for
- * N milliseconds. If `immediate` is passed, trigger the function on the
- * leading edge, instead of the trailing. The function also has a property 'clear' 
- * that is a function which will clear the timer to prevent previously scheduled executions. 
- *
- * @source underscore.js
- * @see http://unscriptable.com/2009/03/20/debouncing-javascript-methods/
- * @param {Function} func function to wrap
- * @param {number} [wait=100] time to wait in ms (`100`)
- * @param {boolean} [immediate=false] should execute at the beginning (`false`)
- * @api public
- */
-function debounce(func, wait, immediate){
-  var timeout, args, context, timestamp, result;
-  if (null == wait) wait = 100;
+function debounce(function_, wait = 100, immediate) {
+	let storedContext;
+	let storedArguments;
+	let timeoutId;
+	let timestamp;
+	let result;
 
-  function later() {
-    var last = Date.now() - timestamp;
+	function later() {
+		const last = Date.now() - timestamp;
 
-    if (last < wait && last >= 0) {
-      timeout = setTimeout(later, wait - last);
-    } else {
-      timeout = null;
-      if (!immediate) {
-        var callContext = context, callArgs = args
-        context = args = null;
-        result = func.apply(callContext, callArgs);
-      }
-    }
-  };
+		if (last < wait && last >= 0) {
+			timeoutId = setTimeout(later, wait - last);
+		} else {
+			timeoutId = undefined;
 
-  var debounced = function(){
-    context = this;
-    args = arguments;
-    timestamp = Date.now();
-    var callNow = immediate && !timeout;
-    if (!timeout) timeout = setTimeout(later, wait);
-    if (callNow) {
-      var callContext = context, callArgs = args
-      context = args = null;
-      result = func.apply(callContext, callArgs);
-    }
+			if (!immediate) {
+				const callContext = storedContext;
+				const callArguments = storedArguments;
+				storedContext = undefined;
+				storedArguments = undefined;
+				result = function_.apply(callContext, callArguments);
+			}
+		}
+	}
 
-    return result;
-  };
+	const debounced = function (...arguments_) {
+		storedContext = this; // eslint-disable-line unicorn/no-this-assignment
+		storedArguments = arguments_;
+		timestamp = Date.now();
 
-  debounced.clear = function() {
-    if (timeout) {
-      clearTimeout(timeout);
-      timeout = null;
-    }
-  };
-  
-  debounced.flush = function() {
-    if (timeout) {
-      var callContext = context, callArgs = args;
-      context = args = null;
-      result = func.apply(callContext, callArgs);
-      
-      clearTimeout(timeout);
-      timeout = null;
-    }
-  };
+		const callNow = immediate && !timeoutId;
 
-  return debounced;
-};
+		if (!timeoutId) {
+			timeoutId = setTimeout(later, wait);
+		}
+
+		if (callNow) {
+			const callContext = storedContext;
+			const callArguments = storedArguments;
+			storedContext = undefined;
+			storedArguments = undefined;
+			result = function_.apply(callContext, callArguments);
+		}
+
+		return result;
+	};
+
+	debounced.clear = () => {
+		if (!timeoutId) {
+			return;
+		}
+
+		clearTimeout(timeoutId);
+		timeoutId = undefined;
+	};
+
+	debounced.flush = () => {
+		if (!timeoutId) {
+			return;
+		}
+
+		const callContext = storedContext;
+		const callArguments = storedArguments;
+		storedContext = undefined;
+		storedArguments = undefined;
+		result = function_.apply(callContext, callArguments);
+
+		clearTimeout(timeoutId);
+		timeoutId = undefined;
+	};
+
+	return debounced;
+}
 
 // Adds compatibility for ES modules
-debounce.debounce = debounce;
+module.exports.debounce = debounce;
 
 module.exports = debounce;
