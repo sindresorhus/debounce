@@ -55,8 +55,9 @@ function debounce(func, wait, immediate){
   
   debounced.flush = function() {
     if (timeout) {
-      result = func.apply(context, args);
+      var callContext = context, callArgs = args;
       context = args = null;
+      result = func.apply(callContext, callArgs);
       
       clearTimeout(timeout);
       timeout = null;
