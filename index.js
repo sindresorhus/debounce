@@ -24,8 +24,9 @@ function debounce(func, wait, immediate){
     } else {
       timeout = null;
       if (!immediate) {
-        result = func.apply(context, args);
+        var callContext = context, callArgs = args
         context = args = null;
+        result = func.apply(callContext, callArgs);
       }
     }
   };
@@ -37,8 +38,9 @@ function debounce(func, wait, immediate){
     var callNow = immediate && !timeout;
     if (!timeout) timeout = setTimeout(later, wait);
     if (callNow) {
-      result = func.apply(context, args);
+      var callContext = context, callArgs = args
       context = args = null;
+      result = func.apply(callContext, callArgs);
     }
 
     return result;
