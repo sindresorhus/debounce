@@ -1,7 +1,7 @@
 {
 	"name": "debounce",
 	"version": "1.2.1",
-	"description": "Creates and returns a new debounced version of the passed function that will postpone its execution until after wait milliseconds have elapsed since the last time it was invoked",
+	"description": "Delay function calls until a set time elapses after the last invocation",
 	"license": "MIT",
 	"repository": "sindresorhus/debounce",
 	"funding": "https://github.com/sponsors/sindresorhus",
@@ -16,22 +16,27 @@
 		"node": ">=18"
 	},
 	"scripts": {
-		"test": "xo && minijasminenode test.js"
+		"test": "xo && node --test"
 	},
 	"files": [
 		"index.js",
 		"index.d.ts"
 	],
 	"keywords": [
+		"debounce",
+		"debouncing",
 		"function",
 		"throttle",
-		"invoke"
+		"invoke",
+		"limit",
+		"limited",
+		"interval",
+		"rate",
+		"batch",
+		"ratelimit"
 	],
 	"devDependencies": {
-		"minijasminenode": "^1.1.1",
-		"mocha": "^10.2.0",
-		"should": "^13.2.3",
-		"sinon": "^1.17.0",
+		"sinon": "^17.0.1",
 		"xo": "^0.56.0"
 	},
 	"xo": {

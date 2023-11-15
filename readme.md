@@ -1,6 +1,6 @@
 # debounce
 
-> Useful for implementing behavior that should only happen after a repeated action has completed
+> Delay function calls until a set time elapses after the last invocation
 
 ## Install
 
@@ -37,10 +37,12 @@ window.onresize.flush();
 
 ### debounce(fn, wait, immediate?)
 
-Creates and returns a new debounced version of the passed function that will postpone its execution until after wait milliseconds have elapsed since the last time it was invoked.
+Creates a debounced function that delays execution until `wait` milliseconds have passed since its last invocation.
 
-Pass `true` for the `immediate` parameter to cause debounce to trigger the function on the leading edge instead of the trailing edge of the wait interval. Useful in circumstances like preventing accidental double-clicks on a "submit" button from firing a second time.
+Set the `immediate` parameter to `true` to invoke the function immediately at the start of the `wait` interval, preventing issues such as double-clicks on a button.
 
-The debounced function returned has a property 'clear' that is a function that will clear any scheduled future executions of your function.
+The returned function has a `.clear()` method to cancel scheduled executions, and a `.flush()` method for immediate execution and resetting the timer for future calls.
 
-The debounced function returned has a property 'flush' that is a function that will immediately execute the function if and only if execution is scheduled, and reset the execution timer for subsequent invocations of the debounced function.
+## Related
+
+- [p-debounce](https://github.com/sindresorhus/p-debounce) - Similar but handles promises.
