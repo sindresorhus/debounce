@@ -1,4 +1,11 @@
-function debounce(function_, wait = 100, immediate) {
+function debounce(function_, wait = 100, options = {}) {
+	if (wait < 0) {
+		throw new RangeError('`wait` must not be negative.');
+	}
+
+	// TODO: Deprecate the boolean parameter at some point.
+	const {immediate} = typeof options === 'boolean' ? {immediate: options} : options;
+
 	let storedContext;
 	let storedArguments;
 	let timeoutId;

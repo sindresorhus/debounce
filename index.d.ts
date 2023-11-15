@@ -10,7 +10,7 @@ The returned function has a `.clear()` method to cancel scheduled executions, an
 declare function debounce<F extends AnyFunction>(
 	function_: F,
 	wait?: number,
-	immediate?: boolean
+	options?: {immediate: boolean}
 ): debounce.DebouncedFunction<F>;
 
 declare namespace debounce {

@@ -168,3 +168,53 @@ test('context check in debounced function', async t => {
 		assert.ok(errorThrown, 'An error should have been thrown');
 	});
 });
+
+test('immediate execution', async t => {
+	let clock;
+
+	await t.test('should execute immediately when immediate is true', async () => {
+		clock = sinon.useFakeTimers();
+		const callback = sinon.spy();
+
+		const fn = debounce(callback, 100, true);
+
+		fn();
+		assert.strictEqual(callback.callCount, 1, 'Callback should be triggered immediately');
+
+		clock.tick(100);
+		assert.strictEqual(callback.callCount, 1, 'Callback should not be triggered again after wait time');
+
+		clock.restore();
+	});
+
+	await t.test('should execute immediately when immediate is in options object', async () => {
+		clock = sinon.useFakeTimers();
+		const callback = sinon.spy();
+
+		const fn = debounce(callback, 100, {immediate: true});
+
+		fn();
+		assert.strictEqual(callback.callCount, 1, 'Callback should be triggered immediately');
+
+		clock.tick(100);
+		assert.strictEqual(callback.callCount, 1, 'Callback should not be triggered again after wait time');
+
+		clock.restore();
+	});
+
+	await t.test('should not execute immediately when immediate is false', async () => {
+		clock = sinon.useFakeTimers();
+		const callback = sinon.spy();
+
+		const fn = debounce(callback, 100, {immediate: false});
+
+		fn();
+		clock.tick(50);
+		assert.strictEqual(callback.callCount, 0, 'Callback should not be triggered immediately');
+
+		clock.tick(50);
+		assert.strictEqual(callback.callCount, 1, 'Callback should be triggered after wait time');
+
+		clock.restore();
+	});
+});

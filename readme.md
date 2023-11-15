@@ -21,6 +21,8 @@ function resize() {
 window.onresize = debounce(resize, 200);
 ```
 
+*(You can also use `const debounce = require('debounce')`)*
+
 To later clear the timer and cancel currently scheduled executions:
 
 ```js
@@ -35,11 +37,11 @@ window.onresize.flush();
 
 ## API
 
-### debounce(fn, wait, immediate?)
+### debounce(fn, wait, options?)
 
 Creates a debounced function that delays execution until `wait` milliseconds have passed since its last invocation.
 
-Set the `immediate` parameter to `true` to invoke the function immediately at the start of the `wait` interval, preventing issues such as double-clicks on a button.
+Set the `immediate` option to `true` to invoke the function immediately at the start of the `wait` interval, preventing issues such as double-clicks on a button.
 
 The returned function has a `.clear()` method to cancel scheduled executions, and a `.flush()` method for immediate execution and resetting the timer for future calls.
 
