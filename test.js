@@ -218,3 +218,182 @@ test('immediate execution', async t => {
 		clock.restore();
 	});
 });
+
+test('debounce edge cases', async t => {
+	const clock = sinon.useFakeTimers();
+
+	await t.test('zero wait time', async () => {
+		const callback = sinon.spy();
+		const fn = debounce(callback, 0);
+
+		fn();
+		clock.tick(1);
+
+		assert.strictEqual(callback.callCount, 1, 'Callback should be triggered immediately for zero wait time');
+	});
+
+	await t.test('negative wait time error handling', async () => {
+		assert.throws(() => {
+			debounce(() => {}, -100);
+		}, RangeError, 'Debounce should throw RangeError for negative wait time');
+	});
+
+	await t.test('repeated rapid calls', async () => {
+		const callback = sinon.spy();
+		const fn = debounce(callback, 100);
+
+		fn();
+		fn();
+		fn();
+		clock.tick(100);
+
+		assert.strictEqual(callback.callCount, 1, 'Callback should be called only once after rapid calls');
+	});
+
+	await t.test('single call', async () => {
+		const callback = sinon.spy();
+		const fn = debounce(callback, 100);
+
+		fn();
+		clock.tick(100);
+
+		assert.strictEqual(callback.callCount, 1, 'Callback should be called once for a single call');
+	});
+
+	await t.test('long wait time', async () => {
+		const callback = sinon.spy();
+		const fn = debounce(callback, 10_000);
+
+		fn();
+		clock.tick(10_000);
+
+		assert.strictEqual(callback.callCount, 1, 'Callback should be called once after long wait time');
+	});
+
+	await t.test('function arguments preservation', async () => {
+		const callback = sinon.spy();
+		const fn = debounce(callback, 100);
+
+		fn('test', 123);
+		clock.tick(100);
+
+		assert.deepStrictEqual(callback.args[0], ['test', 123], 'Arguments should be preserved and passed correctly');
+	});
+
+	await t.test('context preservation', async () => {
+		const callback = sinon.spy();
+		const context = {a: 1};
+
+		// Bind the context to the debounced function
+		const fn = debounce(callback.bind(context), 100);
+
+		fn();
+		clock.tick(100);
+
+		assert.strictEqual(callback.firstCall.thisValue, context, 'Context should be preserved');
+	});
+
+	await t.test('clear method', async () => {
+		const callback = sinon.spy();
+		const fn = debounce(callback, 100);
+
+		fn();
+		fn.clear();
+		clock.tick(100);
+
+		assert.strictEqual(callback.callCount, 0, 'Clear method should cancel scheduled execution');
+	});
+
+	await t.test('non-function parameter error handling', async () => {
+		assert.throws(() => {
+			debounce(123, 100);
+		}, TypeError, 'Debounce should throw TypeError if first parameter is not a function');
+	});
+
+	clock.restore();
+});
+
+test('multiple independent instances', async () => {
+	const clock = sinon.useFakeTimers();
+	const callback1 = sinon.spy();
+	const callback2 = sinon.spy();
+	const fn1 = debounce(callback1, 100);
+	const fn2 = debounce(callback2, 200);
+
+	fn1();
+	fn2();
+	clock.tick(100);
+
+	assert.strictEqual(callback1.callCount, 1, 'First callback should be called once');
+	assert.strictEqual(callback2.callCount, 0, 'Second callback should not be called yet');
+
+	clock.tick(100);
+	assert.strictEqual(callback2.callCount, 1, 'Second callback should be called once');
+
+	clock.restore();
+});
+
+test('execution after timeout with multiple calls', async () => {
+	const clock = sinon.useFakeTimers();
+	const callback = sinon.spy();
+	const fn = debounce(callback, 100);
+
+	fn();
+	fn();
+	fn();
+	clock.tick(300);
+
+	assert.strictEqual(callback.callCount, 1, 'Callback should be executed only once after timeout');
+
+	clock.restore();
+});
+
+test('debounce method cancelled before execution', async () => {
+	const clock = sinon.useFakeTimers();
+	const callback = sinon.spy();
+	const fn = debounce(callback, 100);
+
+	fn();
+	fn.clear();
+	clock.tick(100);
+
+	assert.strictEqual(callback.callCount, 0, 'Callback should not be executed after being cancelled');
+
+	clock.restore();
+});
+
+test('non-standard function calls', async () => {
+	const clock = sinon.useFakeTimers();
+	const callback = sinon.spy();
+	const fn = debounce(callback, 100);
+	const context = {a: 1};
+
+	fn.call(context);
+	fn.apply(context);
+	clock.tick(100);
+
+	assert.strictEqual(callback.callCount, 1, 'Callback should handle call and apply methods correctly');
+
+	clock.restore();
+});
+
+test('no calls made', async () => {
+	const clock = sinon.useFakeTimers();
+	const callback = sinon.spy();
+	debounce(callback, 100);
+
+	clock.tick(100);
+
+	assert.strictEqual(callback.callCount, 0, 'Callback should not be executed if debounce function is not called');
+
+	clock.restore();
+});
+
+test('calling flush method without any scheduled execution', async () => {
+	const callback = sinon.spy();
+	const fn = debounce(callback, 100);
+
+	fn.flush();
+
+	assert.strictEqual(callback.callCount, 0, 'Callback should not be executed if flush is called without any scheduled execution');
+});

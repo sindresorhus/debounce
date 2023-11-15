@@ -1,4 +1,8 @@
 function debounce(function_, wait = 100, options = {}) {
+	if (typeof function_ !== 'function') {
+		throw new TypeError(`Expected the first parameter to be a function, got \`${typeof function_}\`.`);
+	}
+
 	if (wait < 0) {
 		throw new RangeError('`wait` must not be negative.');
 	}
