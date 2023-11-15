@@ -24,6 +24,10 @@ function debounce(function_, wait = 100, immediate) {
 	}
 
 	const debounced = function (...arguments_) {
+		if (storedContext && this !== storedContext) {
+			throw new Error('Debounced method called with different contexts.');
+		}
+
 		storedContext = this; // eslint-disable-line unicorn/no-this-assignment
 		storedArguments = arguments_;
 		timestamp = Date.now();

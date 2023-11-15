@@ -173,3 +173,28 @@ describe('forcing execution', () => {
 		expect(callback.args[2]).toEqual([1]);
 	});
 });
+
+describe('context check in debounced function', () => {
+	it('should throw an error if debounced method is called with different contexts', () => {
+		function MyClass() {}
+
+		MyClass.prototype.debounced = debounce(() => {});
+
+		const instance1 = new MyClass();
+		const instance2 = new MyClass();
+
+		// Call the debounced function on the first instance
+		instance1.debounced();
+
+		let errorThrown = false;
+		try {
+			// Attempt to call the same debounced function on a different instance
+			instance2.debounced();
+		} catch (error) {
+			errorThrown = true;
+			expect(error.message).toEqual('Debounced method called with different contexts.');
+		}
+
+		expect(errorThrown).toBeTruthy();
+	});
+});
