@@ -47,4 +47,5 @@ The returned function has a `.clear()` method to cancel scheduled executions, an
 
 ## Related
 
-- [p-debounce](https://github.com/sindresorhus/p-debounce) - Similar but handles promises.
+- [p-debounce](https://github.com/sindresorhus/p-debounce) - Similar but handles promises
+- [throttleit](https://github.com/sindresorhus/throttleit) - Throttle a function to limit its execution rate
