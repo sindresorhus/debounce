@@ -84,6 +84,19 @@ function debounce(function_, wait = 100, options = {}) {
 		timeoutId = undefined;
 	};
 
+	debounced.trigger = () => {
+		const callContext = storedContext;
+		const callArguments = storedArguments;
+		storedContext = undefined;
+		storedArguments = undefined;
+		result = function_.apply(callContext, callArguments);
+
+		if (timeoutId) {
+			clearTimeout(timeoutId);
+			timeoutId = undefined;
+		}
+	};
+
 	return debounced;
 }
 
