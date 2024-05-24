@@ -29,10 +29,16 @@ To later clear the timer and cancel currently scheduled executions:
 window.onresize.clear();
 ```
 
-To execute any pending invocations and reset the timer:
+To execute immediately only if you have scheduled invocations and reset the timer:
 
 ```js
 window.onresize.flush();
+```
+
+To execute immediately and reset the timer if it was previously set:
+
+```js
+window.onresize.trigger();
 ```
 
 ## API
@@ -43,7 +49,11 @@ Creates a debounced function that delays execution until `wait` milliseconds hav
 
 Set the `immediate` option to `true` to invoke the function immediately at the start of the `wait` interval, preventing issues such as double-clicks on a button.
 
-The returned function has a `.clear()` method to cancel scheduled executions, and a `.flush()` method for immediate execution and resetting the timer for future calls.
+The returned function has the following methods:
+
+- `.clear()` cancels any scheduled executions.
+- `.flush()` if an execution is scheduled then it will be immediately executed and the timer will be cleared.
+- `.trigger()` executes the function immediately and clears the timer if it was previously set.
 
 ## Related
 

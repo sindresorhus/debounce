@@ -16,6 +16,15 @@ function debounce(function_, wait = 100, options = {}) {
 	let timestamp;
 	let result;
 
+	function run() {
+		const callContext = storedContext;
+		const callArguments = storedArguments;
+		storedContext = undefined;
+		storedArguments = undefined;
+		result = function_.apply(callContext, callArguments);
+		return result;
+	}
+
 	function later() {
 		const last = Date.now() - timestamp;
 
@@ -25,11 +34,7 @@ function debounce(function_, wait = 100, options = {}) {
 			timeoutId = undefined;
 
 			if (!immediate) {
-				const callContext = storedContext;
-				const callArguments = storedArguments;
-				storedContext = undefined;
-				storedArguments = undefined;
-				result = function_.apply(callContext, callArguments);
+				result = run();
 			}
 		}
 	}
@@ -50,11 +55,7 @@ function debounce(function_, wait = 100, options = {}) {
 		}
 
 		if (callNow) {
-			const callContext = storedContext;
-			const callArguments = storedArguments;
-			storedContext = undefined;
-			storedArguments = undefined;
-			result = function_.apply(callContext, callArguments);
+			result = run();
 		}
 
 		return result;
@@ -74,27 +75,13 @@ function debounce(function_, wait = 100, options = {}) {
 			return;
 		}
 
-		const callContext = storedContext;
-		const callArguments = storedArguments;
-		storedContext = undefined;
-		storedArguments = undefined;
-		result = function_.apply(callContext, callArguments);
-
-		clearTimeout(timeoutId);
-		timeoutId = undefined;
+		debounced.trigger();
 	};
 
 	debounced.trigger = () => {
-		const callContext = storedContext;
-		const callArguments = storedArguments;
-		storedContext = undefined;
-		storedArguments = undefined;
-		result = function_.apply(callContext, callArguments);
+		result = run();
 
-		if (timeoutId) {
-			clearTimeout(timeoutId);
-			timeoutId = undefined;
-		}
+		debounced.clear();
 	};
 
 	return debounced;

@@ -414,3 +414,21 @@ test('calling the trigger function should run it immediately', async () => {
 
 	clock.restore();
 });
+
+test('calling the trigger should not affect future function calls', async () => {
+	const clock = sinon.useFakeTimers();
+	const callback = sinon.spy();
+	const fn = debounce(callback, 100);
+
+	fn();
+	fn.trigger();
+	fn();
+
+	assert.strictEqual(callback.callCount, 1, 'Callback should be called once when using trigger method');
+
+	clock.tick(100);
+
+	assert.strictEqual(callback.callCount, 2, 'Callback should total two calls after timeout');
+
+	clock.restore();
+});
