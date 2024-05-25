@@ -47,7 +47,7 @@ window.onresize.trigger();
 
 Creates a debounced function that delays execution until `wait` milliseconds have passed since its last invocation.
 
-Set the `immediate` option to `true` to invoke the function immediately at the start of the `wait` interval, preventing issues such as double-clicks on a button.
+Set the `immediate` option to `true` to execute the function immediately at the start of the `wait` interval, preventing issues such as double-clicks on a button.
 
 The returned function has the following methods:
 
