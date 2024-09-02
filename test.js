@@ -157,15 +157,11 @@ test('context check in debounced function', async t => {
 
 		instance1.debounced();
 
-		let errorThrown = false;
-		try {
+		assert.throws(() => {
 			instance2.debounced();
-		} catch (error) {
-			errorThrown = true;
-			assert.strictEqual(error.message, 'Debounced method called with different contexts of the same prototype.', 'Error message should match');
-		}
-
-		assert.ok(errorThrown, 'An error should have been thrown');
+		}, {
+			message: 'Debounced method called with different contexts of the same prototype.',
+		});
 	});
 });
 
