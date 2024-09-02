@@ -147,7 +147,7 @@ test('forcing execution', async t => {
 });
 
 test('context check in debounced function', async t => {
-	await t.test('should throw an error if debounced method is called with different contexts', async () => {
+	await t.test('should throw an error if debounced method is called with different contexts of the same class', async () => {
 		function MyClass() {}
 
 		MyClass.prototype.debounced = debounce(() => {});
@@ -161,7 +161,28 @@ test('context check in debounced function', async t => {
 			instance2.debounced();
 		}, {
 			message: 'Debounced method called with different contexts of the same prototype.',
-		});
+		}, 'An error should have been thrown');
+	});
+
+	await t.test('should not throw an error if debounced method is called with different contexts of different classes', async () => {
+		function MyClass1() {}
+		function MyClass2() {}
+
+		const debouncedFunction = debounce(() => {});
+
+		MyClass1.prototype.debounced = debouncedFunction;
+		MyClass2.prototype.debounced = debouncedFunction;
+
+		const instance1 = new MyClass1();
+		const instance2 = new MyClass2();
+
+		instance1.debounced();
+
+		assert.doesNotThrow(() => {
+			instance2.debounced();
+		}, {
+			message: 'Debounced method called with different contexts of the same prototype.',
+		}, 'An error should not have been thrown');
 	});
 });
 
