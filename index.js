@@ -40,8 +40,12 @@ function debounce(function_, wait = 100, options = {}) {
 	}
 
 	const debounced = function (...arguments_) {
-		if (storedContext && this !== storedContext) {
-			throw new Error('Debounced method called with different contexts.');
+		if (
+			storedContext
+			&& this !== storedContext
+			&& Object.getPrototypeOf(this) === Object.getPrototypeOf(storedContext)
+		) {
+			throw new Error('Debounced method called with different contexts of the same prototype.');
 		}
 
 		storedContext = this; // eslint-disable-line unicorn/no-this-assignment
