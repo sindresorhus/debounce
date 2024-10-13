@@ -449,3 +449,15 @@ test('calling the trigger should not affect future function calls', async () => 
 
 	clock.restore();
 });
+
+test('should correctly handle debounce state transitions', async () => {
+	const callback = sinon.spy();
+	const fn = debounce(callback, 100);
+	assert.strictEqual(fn.isDebouncing, false, 'Callback should return false for first execution');
+
+	fn();
+	assert.strictEqual(fn.isDebouncing, true, 'Callback should return true within debounce delay');
+
+	fn.trigger();
+	assert.strictEqual(fn.isDebouncing, false, 'Callback should return false after debounce triggered');
+});

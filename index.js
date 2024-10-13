@@ -88,6 +88,8 @@ function debounce(function_, wait = 100, options = {}) {
 		debounced.clear();
 	};
 
+	debounced.isDebouncing = () => !!timeoutId;
+
 	return debounced;
 }
 
