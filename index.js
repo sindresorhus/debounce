@@ -65,6 +65,12 @@ function debounce(function_, wait = 100, options = {}) {
 		return result;
 	};
 
+	Object.defineProperty(debounced, 'isPending', {
+		get() {
+			return timeoutId !== undefined;
+		},
+	});
+
 	debounced.clear = () => {
 		if (!timeoutId) {
 			return;
@@ -87,12 +93,6 @@ function debounce(function_, wait = 100, options = {}) {
 
 		debounced.clear();
 	};
-
-	Object.defineProperty(debounced, 'isPending', {
-		get() {
-			return timeoutId !== undefined;
-		}
-	});
 
 	return debounced;
 }

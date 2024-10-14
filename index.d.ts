@@ -21,10 +21,10 @@ declare function debounce<F extends AnyFunction>(
 declare namespace debounce {
 	type DebouncedFunction<F extends AnyFunction> = {
 		(...arguments_: Parameters<F>): ReturnType<F> | undefined;
+		isPending: boolean;
 		clear(): void;
 		flush(): void;
 		trigger(): void;
-		isPending: boolean;
 	};
 }
 
