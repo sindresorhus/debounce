@@ -41,10 +41,10 @@ To execute immediately and reset the timer if it was previously set:
 window.onresize.trigger();
 ```
 
-To checks if the debounce delay is still active:
+To check if the debounce delay is currently active:
 
 ```js
-window.onresize.isDebouncing();
+window.onresize.isPending;
 ```
 
 ## API
@@ -60,7 +60,7 @@ The returned function has the following methods:
 - `.clear()` cancels any scheduled executions.
 - `.flush()` if an execution is scheduled then it will be immediately executed and the timer will be cleared.
 - `.trigger()` executes the function immediately and clears the timer if it was previously set.
-- `.isDebouncing()` checks if the debounce delay is still active.
+- `.isPending` indicates whether the debounce delay is currently active.
 
 ## Related
 
