@@ -7,10 +7,10 @@ Set the `immediate` option to `true` to execute the function immediately at the 
 
 The returned function has the following methods:
 
+- `.isPending` indicates whether the debounce delay is currently active.
 - `.clear()` cancels any scheduled executions.
 - `.flush()` if an execution is scheduled then it will be immediately executed and the timer will be cleared.
 - `.trigger()` executes the function immediately and clears the timer if it was previously set.
-- `.isPending` indicates whether the debounce delay is currently active.
 */
 declare function debounce<F extends AnyFunction>(
 	function_: F,
