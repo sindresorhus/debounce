@@ -5,6 +5,7 @@
 	"license": "MIT",
 	"repository": "sindresorhus/debounce",
 	"funding": "https://github.com/sponsors/sindresorhus",
+	"type": "module",
 	"exports": {
 		"types": "./index.d.ts",
 		"default": "./index.js"

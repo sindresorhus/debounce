@@ -28,4 +28,6 @@ declare namespace debounce {
 	};
 }
 
+export {debounce};
+export default debounce;
 export = debounce;
