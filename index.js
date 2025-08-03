@@ -97,7 +97,7 @@ function debounce(function_, wait = 100, options = {}) {
 	return debounced;
 }
 
+module.exports = debounce;
+
 // Adds compatibility for ES modules
 module.exports.debounce = debounce;
-
-module.exports = debounce;
