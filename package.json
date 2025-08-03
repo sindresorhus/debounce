@@ -13,7 +13,7 @@
 	"types": "./index.d.ts",
 	"sideEffects": false,
 	"engines": {
-		"node": ">=18"
+		"node": ">=20"
 	},
 	"scripts": {
 		"test": "xo && node --test"
