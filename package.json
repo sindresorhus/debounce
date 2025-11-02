@@ -5,15 +5,14 @@
 	"license": "MIT",
 	"repository": "sindresorhus/debounce",
 	"funding": "https://github.com/sponsors/sindresorhus",
+	"type": "module",
 	"exports": {
 		"types": "./index.d.ts",
 		"default": "./index.js"
 	},
-	"main": "./index.js",
-	"types": "./index.d.ts",
 	"sideEffects": false,
 	"engines": {
-		"node": ">=18"
+		"node": ">=20"
 	},
 	"scripts": {
 		"test": "xo && node --test"
@@ -33,15 +32,9 @@
 		"interval",
 		"rate",
 		"batch",
-		"ratelimit"
+		"rate-limit"
 	],
 	"devDependencies": {
-		"sinon": "^17.0.1",
 		"xo": "^0.56.0"
-	},
-	"xo": {
-		"rules": {
-			"unicorn/prefer-module": "off"
-		}
 	}
 }

@@ -1,21 +1,28 @@
-const test = require('node:test');
-const assert = require('node:assert');
-const sinon = require('sinon');
-const debounce = require('./index.js');
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import debounce from './index.js';
 
-// TODO: Use Node.js test timer mocking.
-
-test('housekeeping', async () => {
-	assert.strictEqual(typeof debounce, 'function', 'debounce should be a function');
+test('basic', async () => {
+	assert.equal(typeof debounce, 'function');
 });
 
-test('catch issue #3 - Debounced function executing early?', async t => {
-	let clock;
+test('debounces correctly', async t => {
+	await t.test('delays execution until wait time', async t => {
+		t.mock.timers.enable();
+		const callback = t.mock.fn();
+		const fn = debounce(callback, 100);
 
-	await t.test('should debounce with fast timeout', async () => {
-		clock = sinon.useFakeTimers();
-		const callback = sinon.spy();
+		fn();
+		fn();
+		fn();
+		t.mock.timers.tick(100);
 
+		assert.equal(callback.mock.calls.length, 1);
+	});
+
+	await t.test('reschedules on rapid calls', async t => {
+		t.mock.timers.enable();
+		const callback = t.mock.fn();
 		const fn = debounce(callback, 100);
 
 		setTimeout(fn, 100);
@@ -23,108 +30,43 @@ test('catch issue #3 - Debounced function executing early?', async t => {
 		setTimeout(fn, 200);
 		setTimeout(fn, 250);
 
-		clock.tick(350);
+		t.mock.timers.tick(100);
+		t.mock.timers.tick(50);
+		t.mock.timers.tick(50);
+		t.mock.timers.tick(50);
+		t.mock.timers.tick(100);
 
-		assert.strictEqual(callback.callCount, 1, 'Callback should be triggered once');
-		clock.restore();
+		assert.equal(callback.mock.calls.length, 1);
 	});
-});
 
-test('forcing execution', async t => {
-	let clock;
-
-	await t.test('should not execute prior to timeout', async () => {
-		clock = sinon.useFakeTimers();
-		const callback = sinon.spy();
-
+	await t.test('preserves arguments', async t => {
+		t.mock.timers.enable();
+		const callback = t.mock.fn();
 		const fn = debounce(callback, 100);
 
-		setTimeout(fn, 100);
-		setTimeout(fn, 150);
+		fn('test', 123);
+		t.mock.timers.tick(100);
 
-		clock.tick(175);
-
-		assert.strictEqual(callback.callCount, 0, 'Callback should not be called yet');
-		clock.restore();
+		assert.deepEqual(callback.mock.calls[0].arguments, ['test', 123]);
 	});
 
-	await t.test('should execute prior to timeout when flushed', async () => {
-		clock = sinon.useFakeTimers();
-		const callback = sinon.spy();
+	await t.test('preserves context', async t => {
+		t.mock.timers.enable();
+		const callback = t.mock.fn();
+		const context = {a: 1};
+		const fn = debounce(callback.bind(context), 100);
 
-		const fn = debounce(callback, 100);
+		fn();
+		t.mock.timers.tick(100);
 
-		setTimeout(fn, 100);
-		setTimeout(fn, 150);
-
-		clock.tick(175);
-
-		fn.flush();
-
-		assert.strictEqual(callback.callCount, 1, 'Callback should have been called');
-		clock.restore();
+		assert.equal(callback.mock.calls[0].this, context);
 	});
 
-	await t.test('should not execute again after timeout when flushed before the timeout', async () => {
-		clock = sinon.useFakeTimers();
-		const callback = sinon.spy();
+	await t.test('handles recursive calls', async t => {
+		t.mock.timers.enable();
 
-		const fn = debounce(callback, 100);
-
-		setTimeout(fn, 100);
-		setTimeout(fn, 150);
-
-		clock.tick(175);
-
-		fn.flush();
-
-		assert.strictEqual(callback.callCount, 1, 'Callback should have been called once');
-
-		clock.tick(225);
-
-		assert.strictEqual(callback.callCount, 1, 'Callback should not be called again after timeout');
-		clock.restore();
-	});
-
-	await t.test('should not execute on a timer after being flushed', async () => {
-		clock = sinon.useFakeTimers();
-		const callback = sinon.spy();
-
-		const fn = debounce(callback, 100);
-
-		setTimeout(fn, 100);
-		setTimeout(fn, 150);
-
-		clock.tick(175);
-
-		fn.flush();
-
-		assert.strictEqual(callback.callCount, 1, 'Callback should have been called once');
-
-		setTimeout(fn, 250);
-
-		clock.tick(400);
-
-		assert.strictEqual(callback.callCount, 2, 'Callback should be called again after new timeout');
-		clock.restore();
-	});
-
-	await t.test('should not execute when flushed if nothing was scheduled', async () => {
-		const callback = sinon.spy();
-
-		const fn = debounce(callback, 100);
-
-		fn.flush();
-
-		assert.strictEqual(callback.callCount, 0, 'Callback should not be called when flushed without scheduling');
-	});
-
-	await t.test('should execute with correct args when called again from within timeout', async () => {
-		clock = sinon.useFakeTimers();
-
-		const callback = sinon.spy(n => {
+		const callback = t.mock.fn(n => {
 			--n;
-
 			if (n > 0) {
 				fn(n);
 			}
@@ -133,23 +75,215 @@ test('forcing execution', async t => {
 		const fn = debounce(callback, 100);
 
 		fn(3);
+		t.mock.timers.tick(125);
+		t.mock.timers.tick(250);
+		t.mock.timers.tick(375);
 
-		clock.tick(125);
-		clock.tick(250);
-		clock.tick(375);
-
-		assert.strictEqual(callback.callCount, 3, 'Callback should be called three times');
-		assert.deepStrictEqual(callback.args[0], [3], 'First call args should match');
-		assert.deepStrictEqual(callback.args[1], [2], 'Second call args should match');
-		assert.deepStrictEqual(callback.args[2], [1], 'Third call args should match');
-		clock.restore();
+		assert.equal(callback.mock.calls.length, 3);
+		assert.deepEqual(callback.mock.calls[0].arguments, [3]);
+		assert.deepEqual(callback.mock.calls[1].arguments, [2]);
+		assert.deepEqual(callback.mock.calls[2].arguments, [1]);
 	});
 });
 
-test('context check in debounced function', async t => {
-	await t.test('should throw an error if debounced method is called with different contexts of the same class', async () => {
-		function MyClass() {}
+test('immediate mode', async t => {
+	await t.test('executes immediately on first call', async t => {
+		t.mock.timers.enable();
+		const callback = t.mock.fn();
+		const fn = debounce(callback, 100, {immediate: true});
 
+		fn();
+		assert.equal(callback.mock.calls.length, 1);
+
+		t.mock.timers.tick(100);
+		assert.equal(callback.mock.calls.length, 1);
+	});
+
+	await t.test('ignores calls during wait period', async t => {
+		t.mock.timers.enable();
+		const callback = t.mock.fn();
+		const fn = debounce(callback, 100, {immediate: true});
+
+		fn();
+		fn();
+		t.mock.timers.tick(100);
+
+		assert.equal(callback.mock.calls.length, 1);
+	});
+});
+
+test('return values', async t => {
+	await t.test('returns undefined when not executing', async t => {
+		const callback = t.mock.fn(() => 'result');
+		const fn = debounce(callback, 100);
+
+		assert.equal(fn(), undefined);
+		assert.equal(callback.mock.calls.length, 0);
+	});
+
+	await t.test('returns result in immediate mode', async t => {
+		const callback = t.mock.fn(() => 'result');
+		const fn = debounce(callback, 100, {immediate: true});
+
+		assert.equal(fn(), 'result');
+	});
+
+	await t.test('returns undefined when already pending in immediate mode', async t => {
+		t.mock.timers.enable();
+		const callback = t.mock.fn(() => 'result');
+		const fn = debounce(callback, 100, {immediate: true});
+
+		assert.equal(fn(), 'result');
+		assert.equal(fn(), undefined);
+	});
+});
+
+test('isPending', async () => {
+	const fn = debounce(() => {}, 100);
+
+	assert.equal(fn.isPending, false);
+	fn();
+	assert.equal(fn.isPending, true);
+	fn.trigger();
+	assert.equal(fn.isPending, false);
+});
+
+test('clear()', async t => {
+	await t.test('cancels scheduled execution', async t => {
+		t.mock.timers.enable();
+		const callback = t.mock.fn();
+		const fn = debounce(callback, 100);
+
+		fn();
+		fn.clear();
+		t.mock.timers.tick(100);
+
+		assert.equal(callback.mock.calls.length, 0);
+	});
+
+	await t.test('clears stored arguments', async t => {
+		const callback = t.mock.fn();
+		const fn = debounce(callback, 100);
+
+		fn('arg1', 'arg2');
+		fn.clear();
+		fn.trigger();
+
+		assert.deepEqual(callback.mock.calls[0].arguments, []);
+	});
+});
+
+test('debounce timing', async t => {
+	await t.test('does not execute before timeout elapses', async t => {
+		t.mock.timers.enable();
+		const callback = t.mock.fn();
+		const fn = debounce(callback, 100);
+
+		setTimeout(fn, 100);
+		setTimeout(fn, 150);
+
+		t.mock.timers.tick(175);
+
+		assert.equal(callback.mock.calls.length, 0);
+	});
+});
+
+test('flush()', async t => {
+	await t.test('executes immediately if pending', async t => {
+		t.mock.timers.enable();
+		const callback = t.mock.fn();
+		const fn = debounce(callback, 100);
+
+		fn();
+		t.mock.timers.tick(50);
+		fn.flush();
+
+		assert.equal(callback.mock.calls.length, 1);
+	});
+
+	await t.test('prevents timeout execution after flush', async t => {
+		t.mock.timers.enable();
+		const callback = t.mock.fn();
+		const fn = debounce(callback, 100);
+
+		fn();
+		t.mock.timers.tick(50);
+		fn.flush();
+		t.mock.timers.tick(100);
+
+		assert.equal(callback.mock.calls.length, 1);
+	});
+
+	await t.test('does nothing if not pending', async t => {
+		const callback = t.mock.fn();
+		const fn = debounce(callback, 100);
+
+		fn.flush();
+
+		assert.equal(callback.mock.calls.length, 0);
+	});
+
+	await t.test('allows subsequent calls after flush', async t => {
+		t.mock.timers.enable();
+		const callback = t.mock.fn();
+		const fn = debounce(callback, 100);
+
+		fn();
+		fn();
+		fn.flush();
+
+		assert.equal(callback.mock.calls.length, 1);
+
+		setTimeout(fn, 250);
+		t.mock.timers.tick(75);
+		t.mock.timers.tick(250);
+		t.mock.timers.tick(100);
+
+		assert.equal(callback.mock.calls.length, 2);
+	});
+});
+
+test('trigger()', async t => {
+	await t.test('executes immediately', async t => {
+		t.mock.timers.enable();
+		const callback = t.mock.fn();
+		const fn = debounce(callback, 100);
+
+		fn();
+		fn.trigger();
+
+		assert.equal(callback.mock.calls.length, 1);
+	});
+
+	await t.test('clears timer', async t => {
+		t.mock.timers.enable();
+		const callback = t.mock.fn();
+		const fn = debounce(callback, 100);
+
+		fn();
+		fn.trigger();
+		t.mock.timers.tick(100);
+
+		assert.equal(callback.mock.calls.length, 1);
+	});
+
+	await t.test('allows subsequent calls', async t => {
+		t.mock.timers.enable();
+		const callback = t.mock.fn();
+		const fn = debounce(callback, 100);
+
+		fn();
+		fn.trigger();
+		fn();
+		t.mock.timers.tick(100);
+
+		assert.equal(callback.mock.calls.length, 2);
+	});
+});
+
+test('context validation', async t => {
+	await t.test('throws on different instances of same class', async () => {
+		function MyClass() {}
 		MyClass.prototype.debounced = debounce(() => {});
 
 		const instance1 = new MyClass();
@@ -159,17 +293,14 @@ test('context check in debounced function', async t => {
 
 		assert.throws(() => {
 			instance2.debounced();
-		}, {
-			message: 'Debounced method called with different contexts of the same prototype.',
-		}, 'An error should have been thrown');
+		}, {message: 'Debounced method called with different contexts of the same prototype.'});
 	});
 
-	await t.test('should not throw an error if debounced method is called with different contexts of different classes', async () => {
+	await t.test('allows different classes', async () => {
 		function MyClass1() {}
 		function MyClass2() {}
 
 		const debouncedFunction = debounce(() => {});
-
 		MyClass1.prototype.debounced = debouncedFunction;
 		MyClass2.prototype.debounced = debouncedFunction;
 
@@ -177,287 +308,94 @@ test('context check in debounced function', async t => {
 		const instance2 = new MyClass2();
 
 		instance1.debounced();
-
 		assert.doesNotThrow(() => {
 			instance2.debounced();
-		}, {
-			message: 'Debounced method called with different contexts of the same prototype.',
-		}, 'An error should not have been thrown');
+		});
 	});
 });
 
-test('immediate execution', async t => {
-	let clock;
-
-	await t.test('should execute immediately when immediate is true', async () => {
-		clock = sinon.useFakeTimers();
-		const callback = sinon.spy();
-
-		const fn = debounce(callback, 100, true);
-
-		fn();
-		assert.strictEqual(callback.callCount, 1, 'Callback should be triggered immediately');
-
-		clock.tick(100);
-		assert.strictEqual(callback.callCount, 1, 'Callback should not be triggered again after wait time');
-
-		clock.restore();
-	});
-
-	await t.test('should execute immediately when immediate is in options object', async () => {
-		clock = sinon.useFakeTimers();
-		const callback = sinon.spy();
-
-		const fn = debounce(callback, 100, {immediate: true});
-
-		fn();
-		assert.strictEqual(callback.callCount, 1, 'Callback should be triggered immediately');
-
-		clock.tick(100);
-		assert.strictEqual(callback.callCount, 1, 'Callback should not be triggered again after wait time');
-
-		clock.restore();
-	});
-
-	await t.test('should not execute immediately when immediate is false', async () => {
-		clock = sinon.useFakeTimers();
-		const callback = sinon.spy();
-
-		const fn = debounce(callback, 100, {immediate: false});
-
-		fn();
-		clock.tick(50);
-		assert.strictEqual(callback.callCount, 0, 'Callback should not be triggered immediately');
-
-		clock.tick(50);
-		assert.strictEqual(callback.callCount, 1, 'Callback should be triggered after wait time');
-
-		clock.restore();
-	});
-});
-
-test('debounce edge cases', async t => {
-	const clock = sinon.useFakeTimers();
-
-	await t.test('zero wait time', async () => {
-		const callback = sinon.spy();
+test('edge cases', async t => {
+	await t.test('zero wait time', async t => {
+		t.mock.timers.enable();
+		const callback = t.mock.fn();
 		const fn = debounce(callback, 0);
 
 		fn();
-		clock.tick(1);
+		t.mock.timers.tick(1);
 
-		assert.strictEqual(callback.callCount, 1, 'Callback should be triggered immediately for zero wait time');
+		assert.equal(callback.mock.calls.length, 1);
 	});
 
-	await t.test('negative wait time error handling', async () => {
-		assert.throws(() => {
-			debounce(() => {}, -100);
-		}, RangeError, 'Debounce should throw RangeError for negative wait time');
-	});
-
-	await t.test('repeated rapid calls', async () => {
-		const callback = sinon.spy();
-		const fn = debounce(callback, 100);
-
-		fn();
-		fn();
-		fn();
-		clock.tick(100);
-
-		assert.strictEqual(callback.callCount, 1, 'Callback should be called only once after rapid calls');
-	});
-
-	await t.test('single call', async () => {
-		const callback = sinon.spy();
-		const fn = debounce(callback, 100);
-
-		fn();
-		clock.tick(100);
-
-		assert.strictEqual(callback.callCount, 1, 'Callback should be called once for a single call');
-	});
-
-	await t.test('long wait time', async () => {
-		const callback = sinon.spy();
+	await t.test('long wait time', async t => {
+		t.mock.timers.enable();
+		const callback = t.mock.fn();
 		const fn = debounce(callback, 10_000);
 
 		fn();
-		clock.tick(10_000);
+		t.mock.timers.tick(10_000);
 
-		assert.strictEqual(callback.callCount, 1, 'Callback should be called once after long wait time');
+		assert.equal(callback.mock.calls.length, 1);
 	});
 
-	await t.test('function arguments preservation', async () => {
-		const callback = sinon.spy();
-		const fn = debounce(callback, 100);
-
-		fn('test', 123);
-		clock.tick(100);
-
-		assert.deepStrictEqual(callback.args[0], ['test', 123], 'Arguments should be preserved and passed correctly');
+	await t.test('negative wait throws', async () => {
+		assert.throws(() => {
+			debounce(() => {}, -100);
+		}, RangeError);
 	});
 
-	await t.test('context preservation', async () => {
-		const callback = sinon.spy();
-		const context = {a: 1};
-
-		// Bind the context to the debounced function
-		const fn = debounce(callback.bind(context), 100);
-
-		fn();
-		clock.tick(100);
-
-		assert.strictEqual(callback.firstCall.thisValue, context, 'Context should be preserved');
+	await t.test('boolean options throws', async () => {
+		assert.throws(() => {
+			debounce(() => {}, 100, true);
+		}, {
+			name: 'TypeError',
+			message: 'The `options` parameter must be an object, not a boolean. Use `{immediate: true}` instead.',
+		});
 	});
 
-	await t.test('clear method', async () => {
-		const callback = sinon.spy();
-		const fn = debounce(callback, 100);
-
-		fn();
-		fn.clear();
-		clock.tick(100);
-
-		assert.strictEqual(callback.callCount, 0, 'Clear method should cancel scheduled execution');
-	});
-
-	await t.test('non-function parameter error handling', async () => {
+	await t.test('non-function throws', async () => {
 		assert.throws(() => {
 			debounce(123, 100);
-		}, TypeError, 'Debounce should throw TypeError if first parameter is not a function');
+		}, TypeError);
 	});
 
-	clock.restore();
+	await t.test('call and apply methods', async t => {
+		t.mock.timers.enable();
+		const callback = t.mock.fn();
+		const fn = debounce(callback, 100);
+		const context = {a: 1};
+
+		fn.call(context);
+		fn.apply(context);
+		t.mock.timers.tick(100);
+
+		assert.equal(callback.mock.calls.length, 1);
+	});
+
+	await t.test('no calls made', async t => {
+		t.mock.timers.enable();
+		const callback = t.mock.fn();
+		debounce(callback, 100);
+
+		t.mock.timers.tick(100);
+
+		assert.equal(callback.mock.calls.length, 0);
+	});
 });
 
-test('multiple independent instances', async () => {
-	const clock = sinon.useFakeTimers();
-	const callback1 = sinon.spy();
-	const callback2 = sinon.spy();
+test('multiple instances', async t => {
+	t.mock.timers.enable();
+	const callback1 = t.mock.fn();
+	const callback2 = t.mock.fn();
 	const fn1 = debounce(callback1, 100);
 	const fn2 = debounce(callback2, 200);
 
 	fn1();
 	fn2();
-	clock.tick(100);
+	t.mock.timers.tick(100);
 
-	assert.strictEqual(callback1.callCount, 1, 'First callback should be called once');
-	assert.strictEqual(callback2.callCount, 0, 'Second callback should not be called yet');
+	assert.equal(callback1.mock.calls.length, 1);
+	assert.equal(callback2.mock.calls.length, 0);
 
-	clock.tick(100);
-	assert.strictEqual(callback2.callCount, 1, 'Second callback should be called once');
-
-	clock.restore();
-});
-
-test('execution after timeout with multiple calls', async () => {
-	const clock = sinon.useFakeTimers();
-	const callback = sinon.spy();
-	const fn = debounce(callback, 100);
-
-	fn();
-	fn();
-	fn();
-	clock.tick(300);
-
-	assert.strictEqual(callback.callCount, 1, 'Callback should be executed only once after timeout');
-
-	clock.restore();
-});
-
-test('debounce method cancelled before execution', async () => {
-	const clock = sinon.useFakeTimers();
-	const callback = sinon.spy();
-	const fn = debounce(callback, 100);
-
-	fn();
-	fn.clear();
-	clock.tick(100);
-
-	assert.strictEqual(callback.callCount, 0, 'Callback should not be executed after being cancelled');
-
-	clock.restore();
-});
-
-test('non-standard function calls', async () => {
-	const clock = sinon.useFakeTimers();
-	const callback = sinon.spy();
-	const fn = debounce(callback, 100);
-	const context = {a: 1};
-
-	fn.call(context);
-	fn.apply(context);
-	clock.tick(100);
-
-	assert.strictEqual(callback.callCount, 1, 'Callback should handle call and apply methods correctly');
-
-	clock.restore();
-});
-
-test('no calls made', async () => {
-	const clock = sinon.useFakeTimers();
-	const callback = sinon.spy();
-	debounce(callback, 100);
-
-	clock.tick(100);
-
-	assert.strictEqual(callback.callCount, 0, 'Callback should not be executed if debounce function is not called');
-
-	clock.restore();
-});
-
-test('calling flush method without any scheduled execution', async () => {
-	const callback = sinon.spy();
-	const fn = debounce(callback, 100);
-
-	fn.flush();
-
-	assert.strictEqual(callback.callCount, 0, 'Callback should not be executed if flush is called without any scheduled execution');
-});
-
-test('calling the trigger function should run it immediately', async () => {
-	const clock = sinon.useFakeTimers();
-	const callback = sinon.spy();
-	const fn = debounce(callback, 100);
-
-	fn();
-	fn.trigger();
-
-	assert.strictEqual(callback.callCount, 1, 'Callback should be called once when using trigger method');
-
-	clock.tick(100);
-
-	assert.strictEqual(callback.callCount, 1, 'Callback should stay at one call after timeout');
-
-	clock.restore();
-});
-
-test('calling the trigger should not affect future function calls', async () => {
-	const clock = sinon.useFakeTimers();
-	const callback = sinon.spy();
-	const fn = debounce(callback, 100);
-
-	fn();
-	fn.trigger();
-	fn();
-
-	assert.strictEqual(callback.callCount, 1, 'Callback should be called once when using trigger method');
-
-	clock.tick(100);
-
-	assert.strictEqual(callback.callCount, 2, 'Callback should total two calls after timeout');
-
-	clock.restore();
-});
-
-test('should correctly handle debounce state transitions', async () => {
-	const callback = sinon.spy();
-	const fn = debounce(callback, 100);
-	assert.strictEqual(fn.isPending, false, 'isPending should be false for first execution');
-
-	fn();
-	assert.strictEqual(fn.isPending, true, 'isPending should be true within debounce delay');
-
-	fn.trigger();
-	assert.strictEqual(fn.isPending, false, 'isPending should be false after debounce triggered');
+	t.mock.timers.tick(100);
+	assert.equal(callback2.mock.calls.length, 1);
 });

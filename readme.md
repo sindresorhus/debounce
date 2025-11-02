@@ -21,8 +21,6 @@ function resize() {
 window.onresize = debounce(resize, 200);
 ```
 
-*(You can also use `const debounce = require('debounce')`)*
-
 To check if the debounce delay is currently active:
 
 ```js
@@ -35,7 +33,7 @@ To later clear the timer and cancel currently scheduled executions:
 window.onresize.clear();
 ```
 
-To execute immediately only if you have scheduled invocations and reset the timer:
+Execute immediately only if a call is pending (and reset the timer):
 
 ```js
 window.onresize.flush();

@@ -1,4 +1,4 @@
-function debounce(function_, wait = 100, options = {}) {
+export default function debounce(function_, wait = 100, options = {}) {
 	if (typeof function_ !== 'function') {
 		throw new TypeError(`Expected the first parameter to be a function, got \`${typeof function_}\`.`);
 	}
@@ -7,8 +7,11 @@ function debounce(function_, wait = 100, options = {}) {
 		throw new RangeError('`wait` must not be negative.');
 	}
 
-	// TODO: Deprecate the boolean parameter at some point.
-	const {immediate} = typeof options === 'boolean' ? {immediate: options} : options;
+	if (typeof options === 'boolean') {
+		throw new TypeError('The `options` parameter must be an object, not a boolean. Use `{immediate: true}` instead.');
+	}
+
+	const {immediate} = options;
 
 	let storedContext;
 	let storedArguments;
@@ -60,9 +63,10 @@ function debounce(function_, wait = 100, options = {}) {
 
 		if (callNow) {
 			result = run();
+			return result;
 		}
 
-		return result;
+		return undefined;
 	};
 
 	Object.defineProperty(debounced, 'isPending', {
@@ -78,6 +82,8 @@ function debounce(function_, wait = 100, options = {}) {
 
 		clearTimeout(timeoutId);
 		timeoutId = undefined;
+		storedContext = undefined;
+		storedArguments = undefined;
 	};
 
 	debounced.flush = () => {
@@ -96,8 +102,3 @@ function debounce(function_, wait = 100, options = {}) {
 
 	return debounced;
 }
-
-// Adds compatibility for ES modules
-module.exports.debounce = debounce;
-
-module.exports = debounce;
