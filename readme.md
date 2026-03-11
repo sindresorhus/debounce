@@ -62,5 +62,6 @@ The returned function has the following methods:
 
 ## Related
 
+- [debounce-fn](https://github.com/sindresorhus/debounce-fn) - Similar but with more options like `maxWait` and `before`/`after`
 - [p-debounce](https://github.com/sindresorhus/p-debounce) - Similar but handles promises
 - [throttleit](https://github.com/sindresorhus/throttleit) - Throttle a function to limit its execution rate
