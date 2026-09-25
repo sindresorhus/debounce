@@ -57,9 +57,7 @@ export default function debounce(function_, wait = 100, options = {}) {
 
 		const callNow = immediate && !timeoutId;
 
-		if (!timeoutId) {
-			timeoutId = setTimeout(later, wait);
-		}
+		timeoutId ??= setTimeout(later, wait);
 
 		if (callNow) {
 			result = run();

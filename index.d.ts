@@ -123,5 +123,5 @@ window.onresize = debounce(resize, 200);
 export default function debounce<F extends AnyFunction>(
 	function_: F,
 	wait?: number,
-	options?: Options
+	options?: Options,
 ): DebouncedFunction<F>;
