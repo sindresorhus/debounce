@@ -15,7 +15,7 @@
 		"node": ">=22.2"
 	},
 	"scripts": {
-		"test": "xo && node --test"
+		"test": "xo && node --test && nz"
 	},
 	"files": [
 		"index.js",
@@ -34,6 +34,8 @@
 		"rate-limit"
 	],
 	"devDependencies": {
+		"nz": "^0.1.1",
+		"typescript": "^6.0.3",
 		"xo": "^5.0.1"
 	}
 }

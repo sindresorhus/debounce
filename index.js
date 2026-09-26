@@ -1,4 +1,4 @@
-// `setTimeout` silently clamps a delay above this to 1 ms, so a larger `wait` would re-arm the timer forever instead of waiting.
+// `setTimeout` clamps a delay above this to 1 ms, so a larger `wait` would not wait at all: the timer would wake straight away and re-arm, and it keeps doing so for as long as the delay left to wait stays out of range.
 const maximumTimeout = (2 ** 31) - 1;
 
 export default function debounce(function_, wait = 100, options = {}) {
@@ -14,7 +14,8 @@ export default function debounce(function_, wait = 100, options = {}) {
 		throw new TypeError('The `options` parameter must be an object, not a boolean. Use `{immediate: true}` instead.');
 	}
 
-	const {immediate} = options;
+	// A `= {}` default only covers `undefined`, so a forwarded `null` would otherwise fail here with an internal destructuring error instead of being treated as no options.
+	const {immediate} = options ?? {};
 
 	let storedContext;
 	let storedArguments;
@@ -34,6 +35,7 @@ export default function debounce(function_, wait = 100, options = {}) {
 	}
 
 	function later() {
+		// A negative `last` means the wall clock moved backwards after the call, so the elapsed time is unknowable. Run rather than reschedule against a clock that is behind.
 		const last = Date.now() - timestamp;
 
 		if (last < wait && last >= 0) {
@@ -42,7 +44,7 @@ export default function debounce(function_, wait = 100, options = {}) {
 			timeoutId = undefined;
 
 			if (immediate) {
-				// The leading edge already ran the call, so there is no trailing call to make. Drop the stored call, or it would leak into a later `trigger()` and keep the context check armed for a burst that is already over.
+				// The leading edge already ran the call, so there is no trailing call to make. Drop the stored call, or it would leak into a later `trigger()`.
 				discard();
 			} else {
 				run();
@@ -50,15 +52,8 @@ export default function debounce(function_, wait = 100, options = {}) {
 		}
 	}
 
+	// Two instances calling a debounced prototype method within one wait share one timer, so one of the calls is silently dropped (#8), but this is deliberately not checked. Telling that apart from a handler shared on purpose (#43) needs a prototype walk on every receiver change, which was slow and kept missing real cases or throwing on valid ones.
 	const debounced = function (...arguments_) {
-		if (
-			storedContext
-			&& this !== storedContext
-			&& Object.getPrototypeOf(this) === Object.getPrototypeOf(storedContext)
-		) {
-			throw new Error('Debounced method called with different contexts of the same prototype.');
-		}
-
 		storedContext = this; // eslint-disable-line unicorn/no-this-assignment
 		storedArguments = arguments_;
 		timestamp = Date.now();
@@ -100,7 +95,7 @@ export default function debounce(function_, wait = 100, options = {}) {
 	};
 
 	debounced.trigger = () => {
-		// Cancel before running so that a call the function makes from inside itself is not cancelled.
+		// Cancel before running, so that a call the function makes from inside itself survives, and so that the timer is already gone if it throws and cannot run it a second time.
 		cancel();
 		run();
 	};
