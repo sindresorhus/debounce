@@ -1,10 +1,13 @@
+// `setTimeout` silently clamps a delay above this to 1 ms, so a larger `wait` would re-arm the timer forever instead of waiting.
+const maximumTimeout = (2 ** 31) - 1;
+
 export default function debounce(function_, wait = 100, options = {}) {
 	if (typeof function_ !== 'function') {
 		throw new TypeError(`Expected the first parameter to be a function, got \`${typeof function_}\`.`);
 	}
 
-	if (wait < 0) {
-		throw new RangeError('`wait` must not be negative.');
+	if (!(wait >= 0) || wait > maximumTimeout) {
+		throw new RangeError(`\`wait\` must be a number between 0 and ${maximumTimeout}, got \`${wait}\`.`);
 	}
 
 	if (typeof options === 'boolean') {

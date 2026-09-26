@@ -462,6 +462,33 @@ test('edge cases - negative wait throws', t => {
 	}, RangeError);
 });
 
+test('edge cases - NaN wait throws', t => {
+	t.assert.throws(() => {
+		debounce(() => {}, NaN);
+	}, RangeError);
+});
+
+test('edge cases - wait above the maximum timer delay throws', t => {
+	t.assert.throws(() => {
+		debounce(() => {}, 3_000_000_000);
+	}, RangeError);
+
+	t.assert.throws(() => {
+		debounce(() => {}, Infinity);
+	}, RangeError);
+});
+
+test('edge cases - the maximum timer delay is allowed', t => {
+	const fn = debounce(() => {}, (2 ** 31) - 1);
+
+	// A rejected `wait` would throw here, which fails the test on its own.
+	fn();
+	t.assert.strictEqual(fn.isPending, true);
+
+	fn.clear();
+	t.assert.strictEqual(fn.isPending, false);
+});
+
 test('edge cases - boolean options throws', t => {
 	t.assert.throws(() => {
 		debounce(() => {}, 100, true);
