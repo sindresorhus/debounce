@@ -17,15 +17,17 @@ export default function debounce(function_, wait = 100, options = {}) {
 	let storedArguments;
 	let timeoutId;
 	let timestamp;
-	let result;
+
+	function discard() {
+		storedContext = undefined;
+		storedArguments = undefined;
+	}
 
 	function run() {
 		const callContext = storedContext;
 		const callArguments = storedArguments;
-		storedContext = undefined;
-		storedArguments = undefined;
-		result = function_.apply(callContext, callArguments);
-		return result;
+		discard();
+		return function_.apply(callContext, callArguments);
 	}
 
 	function later() {
@@ -36,8 +38,11 @@ export default function debounce(function_, wait = 100, options = {}) {
 		} else {
 			timeoutId = undefined;
 
-			if (!immediate) {
-				result = run();
+			if (immediate) {
+				// The leading edge already ran the call, so there is no trailing call to make. Drop the stored call, or it would leak into a later `trigger()` and keep the context check armed for a burst that is already over.
+				discard();
+			} else {
+				run();
 			}
 		}
 	}
@@ -59,12 +64,7 @@ export default function debounce(function_, wait = 100, options = {}) {
 
 		timeoutId ??= setTimeout(later, wait);
 
-		if (callNow) {
-			result = run();
-			return result;
-		}
-
-		return undefined;
+		return callNow ? run() : undefined;
 	};
 
 	Object.defineProperty(debounced, 'isPending', {
@@ -73,19 +73,23 @@ export default function debounce(function_, wait = 100, options = {}) {
 		},
 	});
 
-	debounced.clear = () => {
-		if (!timeoutId) {
+	function cancel() {
+		if (timeoutId === undefined) {
 			return;
 		}
 
 		clearTimeout(timeoutId);
 		timeoutId = undefined;
-		storedContext = undefined;
-		storedArguments = undefined;
+	}
+
+	debounced.clear = () => {
+		cancel();
+		discard();
 	};
 
 	debounced.flush = () => {
-		if (!timeoutId) {
+		// Keyed on the stored call rather than the timer. In immediate mode the timer is still armed after the leading edge ran, but there is no call left to run, and forcing one would call the function a second time with no arguments.
+		if (storedArguments === undefined) {
 			return;
 		}
 
@@ -93,9 +97,9 @@ export default function debounce(function_, wait = 100, options = {}) {
 	};
 
 	debounced.trigger = () => {
-		result = run();
-
-		debounced.clear();
+		// Cancel before running so that a call the function makes from inside itself is not cancelled.
+		cancel();
+		run();
 	};
 
 	return debounced;

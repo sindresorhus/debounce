@@ -107,6 +107,63 @@ test('immediate mode - ignores calls during wait period', t => {
 	t.assert.strictEqual(callback.mock.callCount(), 1);
 });
 
+test('flush() - does not run again in immediate mode when the call already ran', t => {
+	t.mock.timers.enable({apis: ['setTimeout', 'Date']});
+	const callback = t.mock.fn();
+	const fn = debounce(callback, 100, {immediate: true});
+
+	fn('a');
+	fn.flush();
+	t.mock.timers.tick(100);
+
+	t.assert.strictEqual(callback.mock.callCount(), 1);
+});
+
+test('flush() - delivers the last call of an immediate burst', t => {
+	t.mock.timers.enable({apis: ['setTimeout', 'Date']});
+	const callback = t.mock.fn();
+	const fn = debounce(callback, 100, {immediate: true});
+
+	fn('a');
+	fn('b');
+	fn.flush();
+	t.mock.timers.tick(100);
+
+	t.assert.strictEqual(callback.mock.callCount(), 2);
+	t.assert.deepStrictEqual(callback.mock.calls[1].arguments, ['b']);
+});
+
+test('immediate mode - a new burst after the window does not trip the context check', t => {
+	t.mock.timers.enable({apis: ['setTimeout', 'Date']});
+	const callback = t.mock.fn();
+	function MyClass() {}
+
+	MyClass.prototype.debounced = debounce(callback, 100, {immediate: true});
+	new MyClass().debounced('a');
+	new MyClass().debounced('b');
+	t.mock.timers.tick(100);
+
+	// A context check throwing here fails the test on its own.
+	new MyClass().debounced('c');
+
+	t.assert.strictEqual(callback.mock.callCount(), 2);
+	t.assert.deepStrictEqual(callback.mock.calls[1].arguments, ['c']);
+});
+
+test('immediate mode - trigger() after the window does not replay earlier arguments', t => {
+	t.mock.timers.enable({apis: ['setTimeout', 'Date']});
+	const callback = t.mock.fn();
+	const fn = debounce(callback, 100, {immediate: true});
+
+	fn('a');
+	fn('b');
+	t.mock.timers.tick(100);
+	fn.trigger();
+
+	t.assert.strictEqual(callback.mock.callCount(), 2);
+	t.assert.deepStrictEqual(callback.mock.calls[1].arguments, []);
+});
+
 test('return values - returns undefined when not executing', t => {
 	const callback = t.mock.fn(() => 'result');
 	const fn = debounce(callback, 100);
@@ -265,6 +322,82 @@ test('trigger() - allows subsequent calls', t => {
 	t.mock.timers.tick(100);
 
 	t.assert.strictEqual(callback.mock.callCount(), 2);
+});
+
+test('trigger() - keeps a call the function schedules from inside itself', t => {
+	t.mock.timers.enable({apis: ['setTimeout', 'Date']});
+	const calls = [];
+	const fn = debounce(() => {
+		calls.push('called');
+		if (calls.length === 1) {
+			fn();
+		}
+	}, 100);
+
+	fn();
+	fn.trigger();
+	t.assert.strictEqual(fn.isPending, true);
+
+	t.mock.timers.tick(100);
+	t.assert.strictEqual(calls.length, 2);
+});
+
+test('flush() - keeps a call the function schedules from inside itself', t => {
+	t.mock.timers.enable({apis: ['setTimeout', 'Date']});
+	let callCount = 0;
+	const fn = debounce(() => {
+		callCount++;
+		if (callCount === 1) {
+			fn();
+		}
+	}, 100);
+
+	fn();
+	t.mock.timers.tick(50);
+	fn.flush();
+	t.assert.strictEqual(fn.isPending, true);
+
+	t.mock.timers.tick(100);
+	t.assert.strictEqual(callCount, 2);
+});
+
+test('trigger() - does not run again when the function throws', t => {
+	t.mock.timers.enable({apis: ['setTimeout', 'Date']});
+	let callCount = 0;
+	const fn = debounce(() => {
+		callCount++;
+		throw new Error('boom');
+	}, 100);
+
+	fn();
+	t.assert.throws(() => {
+		fn.trigger();
+	}, {message: 'boom'});
+
+	t.assert.strictEqual(fn.isPending, false);
+
+	t.mock.timers.tick(100);
+	t.assert.strictEqual(callCount, 1);
+});
+
+test('flush() - does not run again when the function throws', t => {
+	t.mock.timers.enable({apis: ['setTimeout', 'Date']});
+	let callCount = 0;
+	const fn = debounce(() => {
+		callCount++;
+		throw new Error('boom');
+	}, 100);
+
+	fn();
+	t.mock.timers.tick(50);
+	t.assert.throws(() => {
+		fn.flush();
+	}, {message: 'boom'});
+
+	t.assert.strictEqual(fn.isPending, false);
+
+	t.mock.timers.tick(100);
+	t.assert.strictEqual(callCount, 1);
 });
 
 test('context validation - throws on different instances of same class', t => {
