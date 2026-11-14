@@ -1,6 +1,6 @@
 {
 	"name": "debounce",
-	"version": "3.0.0",
+	"version": "4.0.0",
 	"description": "Delay function calls until a set time elapses after the last invocation",
 	"license": "MIT",
 	"repository": "sindresorhus/debounce",
